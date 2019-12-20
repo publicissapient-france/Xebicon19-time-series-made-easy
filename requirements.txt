@@ -2,3 +2,6 @@ jupyter
 matplotlib
 pandas
 gluonts
+pytest
+jupytext
+pytest-env
