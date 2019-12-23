@@ -1,6 +1,8 @@
 import matplotlib.pyplot as plt
 import numpy as np
 from datetime import datetime, timedelta
+from pandas.plotting import register_matplotlib_converters
+register_matplotlib_converters()
 import os
 
 import src.constants.models as md

@@ -38,17 +38,6 @@ from src.evaluation.plots import plot_consumptions
 
 region_df_dict = pickle.load(open(files.REGION_DF_DICT, "rb"))
 
-import os
-region_df_dict_test = pickle.load(open(os.path.join(files.INTERIM_DATA, "region_df_dict{}.pkl".format("_TEST")), "rb"))
-
-region_df_dict_test.keys()
-
-# +
-df = region_df_dict_test['Ile-de-France']
-
-df.head(100)
-# -
-
 plot_consumptions(region_df_dict, 2018, 12)
 plt.show()
 

@@ -17,6 +17,6 @@ def main(bool_dict):
 
 
 if __name__ == "__main__":
-    bool_dict = {"preprocess_data": False,
-                 "train_deepar": True}
+    bool_dict = {"preprocess_data": True,
+                 "train_deepar": False}
     main(bool_dict)
