@@ -28,8 +28,7 @@ def preprocess_energy_consumption_data():
     logging.info("Reading energy consumption raw data.")
     df = (pd.read_csv(
         files.ENERGY_CONSUMPTION, sep=";", parse_dates=[c.EnergyConso.TIMESTAMP],
-        usecols=[c.EnergyConso.REGION, c.EnergyConso.TIMESTAMP, c.EnergyConso.CONSUMPTION],
-        nrows=c.NROWS)
+        usecols=[c.EnergyConso.REGION, c.EnergyConso.TIMESTAMP, c.EnergyConso.CONSUMPTION])
         .sort_values(by=[c.EnergyConso.REGION, c.EnergyConso.TIMESTAMP])
     )
 
@@ -47,6 +46,8 @@ def preprocess_energy_consumption_data():
 
     with open(files.REGION_DF_DICT, "wb") as file:
         pickle.dump(region_df_dict, file)
+
+    return region_df_dict
 
 
 def format_energy_conso_by_hour(df):

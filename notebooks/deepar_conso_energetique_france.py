@@ -25,96 +25,32 @@ pd.options.display.max_rows = None
 matplotlib.rcParams.update({'font.size': 22})
 from pytz import timezone as tz
 import gluonts
+import pickle
 
+# +
 import sys
 sys.path.append("..")
 import src.constants.files as files
 import src.constants.columns as c
 
-# +
-data_path = "./data/"
-data_freq = "H"
-max_epochs = 30
-patience = 10
-learning_rate = 0.0001
-
-test_date = datetime(2019, 1, 1)
-nb_hours_pred = 2*7*24
+from src.evaluation.plots import plot_consumptions
 # -
 
-df = (pd.read_csv(
-        files.ENERGY_CONSUMPTION, sep=";", parse_dates=[c.EnergyConso.TIMESTAMP],
-        usecols=[c.EnergyConso.REGION, c.EnergyConso.TIMESTAMP, c.EnergyConso.CONSUMPTION])
-        .sort_values(by=[c.EnergyConso.REGION, c.EnergyConso.TIMESTAMP])
-    )
+region_df_dict = pickle.load(open(files.REGION_DF_DICT, "rb"))
 
-date = df[c.EnergyConso.TIMESTAMP].iloc[0]
+import os
+region_df_dict_test = pickle.load(open(os.path.join(files.INTERIM_DATA, "region_df_dict{}.pkl".format("_TEST")), "rb"))
 
-date_utc = date.astimezone(tz("UTC"))
-
-datetime.fromtimestamp(date_utc.timestamp())
-
-date
-
-pd.isnull(df["Consommation (MW)"]).value_counts()
-
-df.rename(columns={"Date - Heure": "Date"}, inplace=True)
-df.fillna(df.dropna()["Consommation (MW)"].mean(), inplace=True)
-df["date_heure"] = df["Date"].apply(lambda x: x + timedelta(minutes=x.minute))
-df["date_heure"] = df["date_heure"].apply(lambda x: x.astimezone(tz("UTC")))
-df["date_heure"] = df["date_heure"].apply(lambda x: x.fromtimestamp(x.timestamp()))
-df.head(3)
-
-df_hour = df.groupby(["Région", "date_heure"], as_index=False).agg({"Consommation (MW)": np.sum})
-df_hour.head(3)
-
-df_hour["Région"].value_counts()
-
-print(df_hour["date_heure"].min(), df_hour["date_heure"].max())
-
-full_meteo = pd.read_csv(data_path + "full_meteo.csv", parse_dates=["DATE"]).rename(
-columns={"MAX_TEMP": "max_temp_paris"})[["DATE", "max_temp_paris"]]
-last_meteo_paris = pd.read_csv(data_path + "meteo_paris_2019_juin_sept.csv",
-                               sep=";", parse_dates=["DATE"]).rename(columns={"MAX_TEMP": "max_temp_paris"})
-full_meteo = pd.concat([full_meteo, last_meteo_paris], axis=0)
-full_meteo["DATE"] = full_meteo["DATE"].apply(lambda x: x.date())
-full_meteo.head(1)
+region_df_dict_test.keys()
 
 # +
-df_temp = df_hour.copy()
-df_temp["DATE"] = df_temp["date_heure"].apply(lambda x: x.date())
+df = region_df_dict_test['Ile-de-France']
 
-df_temp = pd.merge(df_temp, full_meteo[["DATE", "max_temp_paris"]], on="DATE", how="left").drop("DATE", axis=1)
-df_temp = df_temp[df_temp["date_heure"] >= start_train_date]
-df_temp.head(1)
+df.head(100)
+# -
 
-# +
-matplotlib.rcParams.update({'font.size': 22})
-year = 2018
-month = 12
-
-plt.figure(1, figsize=(25, 12))
-for region in pd.unique(df_temp["Région"]):
-    df_region = df_temp[(df_temp["Région"]==region)
-                        &(df_temp["date_heure"].apply(lambda x: x.year)==year)
-                       &(df_temp["date_heure"].apply(lambda x: x.month==month))]
-    plt.plot(df_region["date_heure"], df_region["Consommation (MW)"], label=region)
-    plt.ylabel("Consommation (MW)")
-    plt.legend()
-
+plot_consumptions(region_df_dict, 2018, 12)
 plt.show()
-
-# +
-df_dict = {}
-
-for region in pd.unique(df_temp["Région"]):
-    df_dict[region] = df_temp[df_temp["Région"]==region].copy().reset_index(drop=True)
-    df_dict[region].index = df_dict[region]["date_heure"]
-    df_dict[region] = df_dict[region].reindex(
-        pd.date_range(start=df_temp["date_heure"].min(), end=df_temp["date_heure"].max(), freq=data_freq)).drop(
-        ["date_heure", "Région"], axis=1)
-    df_dict[region]["max_temp_paris"] = df_dict[region]["max_temp_paris"].fillna(method="ffill")
-# -
 
 # # Fonctions pour entraînement DeepAR
 

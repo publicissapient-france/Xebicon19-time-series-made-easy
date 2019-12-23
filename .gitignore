@@ -1,3 +1,9 @@
 .DS_Store
 .ipynb_checkpoints
 *.csv
+*.pkl
+*.ipynb
+
+./models/*
+__pycache__
+*.pyc
