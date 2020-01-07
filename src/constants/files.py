@@ -1,4 +1,7 @@
 import os
+import logging
+import sys
+from datetime import datetime
 
 
 def create_folder(path):
@@ -6,9 +9,23 @@ def create_folder(path):
         os.mkdir(path)
     return path
 
-TEST_SUFFIX = os.getenv("TEST_SUFFIX", "") # takes value specified in pytest.ini file when launching tests.
 
 PROJECT_ROOT_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..",)
+LOG_PATH = create_folder(os.path.join(PROJECT_ROOT_PATH, "data", "logs"))
+
+today_str = datetime.now().strftime("%Y-%m-%d")
+LOG_FILE = os.path.join(LOG_PATH, today_str + ".log")
+logging_format = "%(asctime)s - %(levelname)s - %(message)s"
+logging.basicConfig(filename=LOG_FILE, stream=sys.stdout, level=logging.INFO, format=logging_format)
+
+# set up logging to console
+console = logging.StreamHandler()
+console.setLevel(logging.DEBUG)
+console.setFormatter(logging.Formatter(logging_format))
+logging.getLogger('').addHandler(console)
+
+TEST_SUFFIX = os.getenv("TEST_SUFFIX", "") # takes value specified in pytest.ini file when launching tests.
+
 RAW_DATA = os.path.join(PROJECT_ROOT_PATH, "data", "raw")
 INTERIM_DATA = create_folder(os.path.join(PROJECT_ROOT_PATH, "data", "interim"))
 OUTPUT_DATA = create_folder(os.path.join(PROJECT_ROOT_PATH, "data", "output"))

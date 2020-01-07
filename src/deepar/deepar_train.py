@@ -6,8 +6,6 @@ import src.constants.models as md
 from src.deepar.deepar_core import train_predictor
 
 import logging
-import sys
-logging.basicConfig(stream=sys.stdout, level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 
 def train_to_compare_3_ways(max_epochs, learning_rate):

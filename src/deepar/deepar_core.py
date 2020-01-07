@@ -11,8 +11,6 @@ import src.constants.models as md
 import src.constants.files as files
 
 import logging
-import sys
-logging.basicConfig(stream=sys.stdout, level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 
 DEEPAR_PATH = os.path.dirname(os.path.abspath(__file__))
