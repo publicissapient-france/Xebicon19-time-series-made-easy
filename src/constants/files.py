@@ -10,11 +10,12 @@ TEST_SUFFIX = os.getenv("TEST_SUFFIX", "") # takes value specified in pytest.ini
 
 PROJECT_ROOT_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..",)
 RAW_DATA = os.path.join(PROJECT_ROOT_PATH, "data", "raw")
-INTERIM_DATA = os.path.join(PROJECT_ROOT_PATH, "data", "interim")
-OUTPUT_DATA = os.path.join(PROJECT_ROOT_PATH, "data", "output")
+INTERIM_DATA = create_folder(os.path.join(PROJECT_ROOT_PATH, "data", "interim"))
+OUTPUT_DATA = create_folder(os.path.join(PROJECT_ROOT_PATH, "data", "output"))
 
 PLOTS = create_folder(os.path.join(OUTPUT_DATA, "plots{}".format(TEST_SUFFIX)))
 
+ENERGY_CONSUMPTION_URL = url = "https://opendata.reseaux-energies.fr/explore/dataset/eco2mix-regional-cons-def/download/?format=csv&timezone=Europe/Paris&use_labels_for_header=true&csv_separator=%3B"
 ENERGY_CONSUMPTION = os.path.join(RAW_DATA, "eco2mix-regional-cons-def.csv")
 MAIN_METEO = os.path.join(RAW_DATA, "full_meteo.csv")
 LAST_METEO_PARIS = os.path.join(RAW_DATA, "meteo_paris_2019_juin_sept.csv")

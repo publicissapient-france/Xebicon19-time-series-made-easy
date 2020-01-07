@@ -3,11 +3,14 @@ import numpy as np
 from datetime import datetime, timedelta
 from pytz import timezone as tz
 import pickle
+import urllib
+import tqdm
 
 import src.constants.columns as c
 import src.constants.files as files
 import src.constants.models as md
 
+import os
 import logging
 import sys
 logging.basicConfig(stream=sys.stdout, level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -25,6 +28,9 @@ def preprocess_meteo_data():
 
 
 def preprocess_energy_consumption_data():
+    if not os.path.exists(files.ENERGY_CONSUMPTION):
+        logging.info("Downloading energy raw data.")
+        download_url(files.ENERGY_CONSUMPTION_URL, os.path.join(files.RAW_DATA, "test.csv"))
     logging.info("Reading energy consumption raw data.")
     df = (pd.read_csv(
         files.ENERGY_CONSUMPTION, sep=";", parse_dates=[c.EnergyConso.TIMESTAMP],
@@ -94,3 +100,16 @@ def build_region_df_dict_from_temp_df(temp_df):
             method="ffill")
 
     return region_df_dict
+
+
+class DownloadProgressBar(tqdm):
+    def update_to(self, b=1, bsize=1, tsize=None):
+        if tsize is not None:
+            self.total = tsize
+        self.update(b * bsize - self.n)
+
+
+def download_url(url, output_path):
+    with DownloadProgressBar(unit='B', unit_scale=True,
+                             miniters=1, desc=output_path.split('/')[-1]) as t:
+        urllib.request.urlretrieve(url, filename=output_path, reporthook=t.update_to)

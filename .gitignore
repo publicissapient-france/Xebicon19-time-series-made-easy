@@ -4,8 +4,11 @@
 *.pkl
 *.ipynb
 
-./models/*
+src/deepar/models/*
+src/prophet/models/*
 __pycache__
 *.pyc
 
 .idea
+
+data/output/plots_TEST/*
