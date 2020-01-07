@@ -67,7 +67,7 @@ def predictor_path(region_df_dict, regions_list, max_epochs, learning_rate, feat
         raise ValueError("You have to complexify the model naming system if you want to train the model on an "
         "incomplete subset of regions.")
     if feat_dynamic_cols is not None:
-        current_predictor_name += "_".join(feat_dynamic_cols)
+        current_predictor_name += "_" + "_".join(feat_dynamic_cols)
     # Add trial number
     existing_models = os.listdir(MODELS_PATH)
     old_trials_for_same_predictor = [model for model in existing_models if model.startswith(current_predictor_name)]

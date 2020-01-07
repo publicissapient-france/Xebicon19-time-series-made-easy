@@ -7,3 +7,5 @@
 ./models/*
 __pycache__
 *.pyc
+
+.idea

@@ -7,3 +7,6 @@ pytest
 jupytext
 pytest-env
 python-dateutil==2.8.0
+pystan
+fbprophet
+plotly
