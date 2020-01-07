@@ -12,3 +12,5 @@ __pycache__
 .idea
 
 data/output/plots_TEST/*
+
+*.log

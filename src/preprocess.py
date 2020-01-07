@@ -4,7 +4,7 @@ from datetime import datetime, timedelta
 from pytz import timezone as tz
 import pickle
 import urllib
-import tqdm
+from tqdm import tqdm
 
 import src.constants.columns as c
 import src.constants.files as files
@@ -108,6 +108,5 @@ class DownloadProgressBar(tqdm):
 
 
 def download_url(url, output_path):
-    with DownloadProgressBar(unit='B', unit_scale=True,
-                             miniters=1, desc=output_path.split('/')[-1]) as t:
+    with DownloadProgressBar(unit='B', unit_scale=True, miniters=1, desc=output_path.split('/')[-1]) as t:
         urllib.request.urlretrieve(url, filename=output_path, reporthook=t.update_to)

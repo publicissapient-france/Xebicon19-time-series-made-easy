@@ -51,7 +51,7 @@ def train_predictor(region_df_dict, end_train_date, regions_list, max_epochs, le
 
     logging.info("Saving model with {} epochs and learning rate of {}".format(max_epochs, learning_rate))
     with open(predictor_path(region_df_dict, regions_list, max_epochs, learning_rate, feat_dynamic_cols), "wb") as file:
-        pickle.dump(region_df_dict, file)
+        pickle.dump(predictor, file)
 
     return predictor
 

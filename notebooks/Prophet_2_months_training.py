@@ -99,12 +99,8 @@ df_region_per_hour_ile_de_france_small.head()
 
 df_region_per_hour_ile_de_france_small.dtypes
 
-# +
 # Select training set:
 df_region_per_hour_ile_de_france_small_train = df_region_per_hour_ile_de_france_small[(df_region_per_hour_ile_de_france_small['date_time']<='2018-12-31 23:00:00')&(df_region_per_hour_ile_de_france_small['date_time']>='2018-11-01 00:00:00')]
-
-
-# -
 
 df_region_per_hour_ile_de_france_small_train.head()
 
@@ -187,36 +183,6 @@ mean_absolute_percentage_error(y_true, y_pred)
 
 # # Add meteo:
 
-full_meteo = pd.read_csv("../data/full_meteo.csv", parse_dates=["DATE"]).rename(
-columns={"MAX_TEMP": "max_temp_paris"})[["DATE", "max_temp_paris"]]
-last_meteo_paris = pd.read_csv('../data/' + "meteo_paris_2019_juin_sept.csv",
-                               sep=";", parse_dates=["DATE"]).rename(columns={"MAX_TEMP": "max_temp_paris"})
-full_meteo = pd.concat([full_meteo, last_meteo_paris], axis=0)
-full_meteo["DATE"] = full_meteo["DATE"].apply(lambda x: x.date())
-full_meteo.tail(10)
-
-df_region_per_hour_ile_de_france = df_region_per_hour_ile_de_france_small
-
-df_region_per_hour_ile_de_france.head()
-
-df_region_per_hour_ile_de_france.dtypes
-
-# +
-df_temp = df_region_per_hour_ile_de_france.copy()
-df_temp["DATE"] = df_temp["date"].apply(lambda x: x.date())
-
-df_temp = pd.merge(df_temp, full_meteo[["DATE", "max_temp_paris"]], on="DATE", how="left").drop("DATE", axis=1)
-df_temp.tail(1)
-
-# +
-# Select training set:
-df_temp_train = df_temp[(df_temp['date']<'2019-01-01')]
-
-
-# -
-
-df_temp_train.tail()
-
 model_energy_meteo = Prophet()
 
 model_energy_meteo.add_regressor('max_temp_paris')
@@ -231,11 +197,7 @@ model_energy_meteo.fit(df_temp_train)
 future_ile_de_france_energy_2019_meteo_date = model_energy_meteo.make_future_dataframe(periods=14*24,freq='H', include_history = False)
 
 
-# +
 future_ile_de_france_energy_2019_meteo_date['max_temp_paris']=df_temp[(df_temp['date']>='2019-01-01')&(df_temp['date']<'2019-01-15')]['max_temp_paris'].to_numpy()
-
-
-# -
 
 future_ile_de_france_energy_2019_meteo_date.tail()
 

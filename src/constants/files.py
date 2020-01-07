@@ -1,6 +1,5 @@
 import os
 import logging
-import sys
 from datetime import datetime
 
 
@@ -16,7 +15,7 @@ LOG_PATH = create_folder(os.path.join(PROJECT_ROOT_PATH, "data", "logs"))
 today_str = datetime.now().strftime("%Y-%m-%d")
 LOG_FILE = os.path.join(LOG_PATH, today_str + ".log")
 logging_format = "%(asctime)s - %(levelname)s - %(message)s"
-logging.basicConfig(filename=LOG_FILE, stream=sys.stdout, level=logging.INFO, format=logging_format)
+logging.basicConfig(filename=LOG_FILE, level=logging.INFO, format=logging_format)
 
 # set up logging to console
 console = logging.StreamHandler()
