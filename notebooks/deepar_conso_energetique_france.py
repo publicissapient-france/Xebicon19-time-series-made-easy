@@ -144,7 +144,7 @@ def plot_forecasts(df_dict, test_date, tss, forecasts, past_length, num_plots, f
 # # Test Île de France
 
 # +
-idf_list = ["Ile-de-France"]
+idf_list = [md.IDF]
 
 idf_predictor = train_predictor(df_dict, end_train_date, idf_list,
                                 target_col="Consommation (MW)", feat_dynamic_cols=None)
@@ -164,13 +164,13 @@ all_reg_predictor = train_predictor(df_dict, end_train_date, all_regions,
 # -
 
 matplotlib.rcParams.update({'font.size': 22})
-forecasts, tss = make_predictions(all_reg_predictor, df_dict, test_date, ["Ile-de-France"], target_col="Consommation (MW)")
+forecasts, tss = make_predictions(all_reg_predictor, df_dict, test_date, [md.IDF], target_col="Consommation (MW)")
 plot_forecasts(df_dict, test_date, tss, forecasts, past_length=2*nb_hours_pred, num_plots=1, figname="Paris et autres régions")
 
 # # Test Île de France avec température de Paris maximale du jour
 
 # +
-idf_list = ["Ile-de-France"]
+idf_list = [md.IDF]
 
 temp_pred = train_predictor(df_dict, end_train_date, idf_list,
                                     target_col="Consommation (MW)", feat_dynamic_cols=["max_temp_paris"])

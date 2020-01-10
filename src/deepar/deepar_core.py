@@ -3,7 +3,7 @@ from gluonts.trainer import Trainer
 from gluonts.dataset.common import ListDataset
 from gluonts.evaluation.backtest import make_evaluation_predictions
 
-from datetime import datetime, timedelta
+from datetime import timedelta
 import pickle
 import os
 
@@ -14,7 +14,7 @@ import logging
 
 
 DEEPAR_PATH = os.path.dirname(os.path.abspath(__file__))
-MODELS_PATH = files.create_folder(os.path.join(DEEPAR_PATH, "models"))
+MODELS_PATH = files.create_folder(os.path.join(DEEPAR_PATH, "models" + files.TEST_SUFFIX))
 
 
 def train_predictor(region_df_dict, end_train_date, regions_list, max_epochs, learning_rate, target_col,
@@ -56,7 +56,7 @@ def train_predictor(region_df_dict, end_train_date, regions_list, max_epochs, le
     return predictor
 
 
-def predictor_path(region_df_dict, regions_list, max_epochs, learning_rate, feat_dynamic_cols):
+def predictor_path(region_df_dict, regions_list, max_epochs, learning_rate, feat_dynamic_cols, trial_number=None):
     if len(regions_list) == 1:
         current_predictor_name = "{}_{}_epochs_lr_{}".format(regions_list[0], max_epochs, learning_rate)
     elif len(regions_list) == len(list(region_df_dict.keys())):
@@ -66,10 +66,14 @@ def predictor_path(region_df_dict, regions_list, max_epochs, learning_rate, feat
         "incomplete subset of regions.")
     if feat_dynamic_cols is not None:
         current_predictor_name += "_" + "_".join(feat_dynamic_cols)
-    # Add trial number
-    existing_models = os.listdir(MODELS_PATH)
-    old_trials_for_same_predictor = [model for model in existing_models if model.startswith(current_predictor_name)]
-    current_predictor_name = current_predictor_name + "_trial_{}".format(len(old_trials_for_same_predictor) + 1)
+    # Add 1 to max existing trial number if trial_number is not specified in keywords
+    if trial_number is None:
+        existing_models = os.listdir(MODELS_PATH)
+        old_trials_for_same_predictor = [model for model in existing_models if model.startswith(current_predictor_name)]
+        last_trial_nb = len(old_trials_for_same_predictor)
+    else:
+        last_trial_nb = trial_number - 1
+    current_predictor_name = current_predictor_name + "_trial_{}".format(last_trial_nb + 1)
     return os.path.join(MODELS_PATH, current_predictor_name)
 
 
@@ -79,8 +83,9 @@ def make_predictions(predictor, region_df_dict, test_date, regions_list, target_
             [{"item_id": region,
               "start": region_df_dict[region].index[0],
               "target": region_df_dict[region][target_col][:test_date + timedelta(hours=md.NB_HOURS_PRED)],
-              "feat_dynamic_real": [region_df_dict[region][feat_dynamic_col][:test_date + timedelta(hours=md.NB_HOURS_PRED)]
-                                    for feat_dynamic_col in feat_dynamic_cols]
+              "feat_dynamic_real": [
+                  region_df_dict[region][feat_dynamic_col][:test_date + timedelta(hours=md.NB_HOURS_PRED)]
+                  for feat_dynamic_col in feat_dynamic_cols]
               }
              for region in regions_list],
             freq=md.FREQ

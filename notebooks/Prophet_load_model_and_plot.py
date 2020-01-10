@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # ---
 # jupyter:
 #   jupytext:
@@ -34,12 +35,30 @@ sys.path.append("..")
 import src.constants.files as files
 
 from src.prophet.prophet_core import *
+import src.constants.files as files
+import src.constants.models as md
+
+from src.prophet.prophet_train import *
+# -
+
+with open(os.path.join(MODELS_PATH, files.PROPHET_2_YEARS_MODEL), "rb") as file:
+    model_2_years = pickle.load(file)
+
+future_idf_energy_date_2019 = model_2_years.make_future_dataframe(
+    periods=md.NB_HOURS_PRED, freq=md.FREQ, include_history = False)
+future_energy_forcast_idf_2019 = model_2_years.predict(future_idf_energy_date_2019)
 
 # +
-start_train_date = datetime(2018, 1, 1)
-end_train_date = datetime(2018, 12, 31, 23)
+region_df_dict = pickle.load(open(files.REGION_DF_DICT, "rb"))
+df_idf = region_df_dict[md.IDF]
 
-nb_days_pred = 3
+df_idf_plot = df_idf[(df_idf.index<=md.END_TRAIN_DATE + timedelta(hours=md.NB_HOURS_PRED))
+                     &(df_idf.index>=md.START_TRAIN_DATE)].copy()
+
+y_true = df_idf[(df_idf.index > md.END_TRAIN_DATE)
+                &(df_idf.index <= md.END_TRAIN_DATE + timedelta(hours=md.NB_HOURS_PRED))]['Consommation (MW)']
+
+y_pred = future_energy_forcast_idf_2019['yhat']
 
 
 # -
@@ -49,46 +68,12 @@ def mean_absolute_percentage_error(y_true, y_pred):
     return np.mean(np.abs((y_true - y_pred) / y_true))
 
 
-# # Forecasting for Ile de France
-
-region_df_dict = pickle.load(open(files.REGION_DF_DICT, "rb"))
-df_dict = region_df_dict["Ile-de-France"]
-
-df_dict.head()
-
-df_prophet_train = format_training_data(df_dict, start_train_date, end_train_date)
-
-start_time = time()
-model_energy = Prophet(interval_width=0.9, yearly_seasonality=True)
-model_energy.fit(df_prophet_train)
-end_time = time()
-print ("This model took %.2f seconds to train" % (end_time - start_time))
-
-# # Plot forecast
-
-future_idf_energy_date_2019 = model_energy.make_future_dataframe(
-    periods=nb_days_pred*24,freq='H', include_history = False)
-future_energy_forcast_idf_2019 = model_energy.predict(future_idf_energy_date_2019)
-
-future_energy_forcast_idf_2019[['ds', 'yhat', 'yhat_lower', 'yhat_upper']].head(2)
-
 # +
-df_idf_plot = df_idf[(df_idf.index<=end_train_date + timedelta(days=nb_days_pred))
-                     &(df_idf.index>=start_train_date)].copy()
-
-y_true = df_idf[(df_idf.index > end_train_date)
-                &(df_idf.index <= end_train_date + timedelta(days=nb_days_pred))]['Consommation (MW)']
-
-y_pred = future_energy_forcast_idf_2019['yhat']
-
-# +
-nb_days_plot = 7
-
 matplotlib.rcParams.update({'font.size': 15})
-plt.figure(figsize=(10,5),linewidth=2)
+plt.figure(figsize=(20,5),linewidth=2)
 
-plt.plot(df_idf_plot[-nb_days_plot*24:].index,
-         df_idf_plot[-nb_days_plot*24:]['Consommation (MW)'],
+plt.plot(df_idf_plot[-2 * md.NB_HOURS_PRED:].index,
+         df_idf_plot[-2 * md.NB_HOURS_PRED:]['Consommation (MW)'],
          color='steelblue',label='observation',linewidth=2.0)
 plt.plot(future_energy_forcast_idf_2019.ds,
          future_energy_forcast_idf_2019.yhat,
@@ -112,10 +97,6 @@ plt.rc('axes', labelsize=10)
 plt.rc('legend', fontsize=10)
 plt.margins(0)
 plt.legend()
-
 # -
-
-fig2 = model_energy.plot_components(future_energy_forcast_idf_2019)
-fig2.set_size_inches(20,10,forward=True)
 
 

@@ -6,6 +6,8 @@
 
 src/deepar/models/*
 src/prophet/models/*
+src/deepar/models_TEST/*
+src/prophet/models_TEST/*
 __pycache__
 *.pyc
 

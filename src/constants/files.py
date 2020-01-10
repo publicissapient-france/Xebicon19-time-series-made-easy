@@ -38,3 +38,6 @@ LAST_METEO_PARIS = os.path.join(RAW_DATA, "meteo_paris_2019_juin_sept.csv")
 
 FULL_METEO = os.path.join(INTERIM_DATA, "full_meteo.csv")
 REGION_DF_DICT = os.path.join(INTERIM_DATA, "region_df_dict.pkl")
+
+PROPHET_2_YEARS_MODEL = "prophet_2_years.pkl"
+PROPHET_2_YEARS_WEATHER_MODEL = "prophet_2_years_with_weather.pkl"

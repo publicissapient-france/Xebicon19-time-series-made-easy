@@ -7,6 +7,8 @@ import os
 
 import src.constants.models as md
 import src.constants.files as files
+import src.constants.columns as c
+from src.core import mean_absolute_percentage_error
 
 
 DEEPAR_PLOTS = files.create_folder(os.path.join(files.PLOTS, "deepar"))
@@ -21,11 +23,12 @@ def plot_forecasts(df_dict, test_date, tss, forecasts, past_length, figname):
         plt.legend(["observations", "median prediction", "90% confidence interval", "50% confidence interval"])
 
         results_mean = forecast.mean
-        ground_truth = df_dict[forecast.item_id]["Consommation (MW)"][
+        ground_truth = df_dict[forecast.item_id][c.EnergyConso.CONSUMPTION][
                        test_date + timedelta(hours=1):test_date + timedelta(hours=md.NB_HOURS_PRED)].values
-        MAPE = np.mean(np.apply_along_axis(abs, 0, (ground_truth - results_mean) / ground_truth))
-        plt.title(forecast.item_id + " MAPE:{}%".format(str(round(100 * MAPE, 1))))
-        plt.ylabel("Consumption (MW)")
+        mape = mean_absolute_percentage_error(ground_truth, results_mean)
+
+        plt.title(forecast.item_id + " MAPE:{}%".format(str(round(100 * mape, 1))))
+        plt.ylabel(c.EnergyConso.CONSUMPTION)
         plt.xlabel("")
         ax.set_xlim([test_date - timedelta(days=md.NB_HOURS_PRED / 24), test_date + timedelta(days=md.NB_HOURS_PRED / 24)])
         ax.set_ylim([12000, 28000])
@@ -38,5 +41,5 @@ def plot_forecasts(df_dict, test_date, tss, forecasts, past_length, figname):
         yticks = np.arange(14000, 28000, step=2000)
         ax.set_yticks(yticks)
         ax.set_yticklabels([str(x) for x in yticks], fontsize=label_fontsize)
-        plt.savefig(os.path.join(DEEPAR_PLOTS, "{}.png".format(figname)))
-        plt.show()
+        plt.savefig(os.path.join(DEEPAR_PLOTS, f"{figname}.png"))
+        plt.close()
