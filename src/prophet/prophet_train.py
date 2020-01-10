@@ -37,5 +37,5 @@ def prophet_train():
     model_energy_with_weather.add_regressor(c.Meteo.MAX_TEMP_PARIS)
     model_energy_with_weather.fit(df_prophet_train)
     with open(os.path.join(MODELS_PATH, files.PROPHET_2_YEARS_WEATHER_MODEL), "wb") as file:
-        pickle.dump(model_energy, file)
+        pickle.dump(model_energy_with_weather, file)
     logging.info("Training Prophet model on 2 years took %.2f seconds." % (time() - start_time))
