@@ -1,12 +1,13 @@
 from src.preprocess import preprocess_meteo_data, preprocess_energy_consumption_data
 from src.evaluation.plots import plot_consumptions
-from src.deepar.deepar_train import train_to_compare_3_ways
+from src.deepar.deepar_train import train_to_compare_3_ways, train_idf_n_times
 from src.prophet.prophet_train import prophet_train
 from src.evaluation.evaluation import evaluate_models
 
 import src.constants.models as md
 
 import os
+import logging
 
 
 def main(bool_dict):
@@ -24,11 +25,18 @@ def main(bool_dict):
     if bool_dict["evaluate"]:
         evaluate_models()
 
+    if bool_dict["multiple_deepar_trainings"]:
+        logging.info("Training deepar multiple times to test stability.")
+        for max_epochs in eval(os.getenv("TEST_MAX_EPOCHS_LIST", "[20, 40, 60, 80, 100]")):
+            train_idf_n_times(max_epochs, md.LEARNING_RATE,
+                              n_trainings=eval(os.getenv("MAX_NB_TRAININGS", "10")))
+
 
 
 if __name__ == "__main__":
     bool_dict = {"preprocess_data": False,
                  "train_deepar": False,
                  "train_prophet": True,
-                 "evaluate": True}
+                 "evaluate": True,
+                 "multiple_deepar_trainings": True}
     main(bool_dict)

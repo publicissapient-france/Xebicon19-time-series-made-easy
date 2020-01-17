@@ -28,7 +28,7 @@ def preprocess_meteo_data():
 def preprocess_energy_consumption_data():
     if not os.path.exists(files.ENERGY_CONSUMPTION):
         logging.info("Downloading energy raw data.")
-        download_url(files.ENERGY_CONSUMPTION_URL, os.path.join(files.RAW_DATA, "test.csv"))
+        download_url(files.ENERGY_CONSUMPTION_URL, os.path.join(files.RAW_DATA, files.ENERGY_CONSUMPTION))
     logging.info("Reading energy consumption raw data.")
     df = (pd.read_csv(
         files.ENERGY_CONSUMPTION, sep=";", parse_dates=[c.EnergyConso.TIMESTAMP],

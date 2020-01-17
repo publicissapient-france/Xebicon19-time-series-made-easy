@@ -30,7 +30,9 @@ def evaluate_models():
     logging.info("Plotting Deepar forecasts.")
     deepar_confs = deepar_training_confs(region_df_dict)
     for deepar_conf in deepar_confs:
-        forecasts, tss, model_pkl_path = prepare_data_for_deepar_plot(deepar_conf, region_df_dict)
+        forecasts, tss, model_pkl_path = prepare_data_for_deepar_plot(
+            region_df_dict, deepar_conf["region_list"], deepar_conf["feat_dynamic_cols"], md.MAX_EPOCHS,
+            md.LEARNING_RATE)
 
         plot_forecasts(region_df_dict, md.END_TRAIN_DATE, tss, forecasts, past_length=2 * md.NB_HOURS_PRED,
                        figname=Path(model_pkl_path).name)
@@ -61,12 +63,9 @@ def prepare_data_for_prophet_plot(df_idf, model_name):
     return df_idf_plot, mape, energy_forecast_idf
 
 
-def prepare_data_for_deepar_plot(deepar_conf, region_df_dict):
-    regions_list = deepar_conf["region_list"]
-    feat_dynamic_cols = deepar_conf["feat_dynamic_cols"]
-
+def prepare_data_for_deepar_plot(region_df_dict, regions_list, feat_dynamic_cols, max_epochs, learning_rate):
     model_pkl_path = predictor_path(
-        region_df_dict, regions_list, os.getenv("TEST_MAX_EPOCHS", md.MAX_EPOCHS), md.LEARNING_RATE, feat_dynamic_cols,
+        region_df_dict, regions_list, os.getenv("TEST_MAX_EPOCHS", max_epochs), learning_rate, feat_dynamic_cols,
         trial_number=1)
 
     with open(model_pkl_path, "rb") as model_pkl:

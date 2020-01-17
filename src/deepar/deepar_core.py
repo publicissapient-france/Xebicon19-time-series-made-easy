@@ -46,11 +46,15 @@ def train_predictor(region_df_dict, end_train_date, regions_list, max_epochs, le
              for region in regions_list],
             freq=md.FREQ
         )
-
+    model_path = predictor_path(region_df_dict, regions_list, max_epochs, learning_rate, feat_dynamic_cols)
+    model_dir, model_name = os.path.split(model_path)
+    logging.info("Training deepar model {}".format(model_name))
+    logging.getLogger().setLevel(logging.WARNING)
     predictor = estimator.train(training_data=training_data)
+    logging.getLogger().setLevel(logging.INFO)
 
     logging.info("Saving model with {} epochs and learning rate of {}".format(max_epochs, learning_rate))
-    with open(predictor_path(region_df_dict, regions_list, max_epochs, learning_rate, feat_dynamic_cols), "wb") as file:
+    with open(model_path, "wb") as file:
         pickle.dump(predictor, file)
 
     return predictor

@@ -3,10 +3,10 @@ import pickle
 import src.constants.files as files
 import src.constants.models as md
 import src.constants.columns as c
-
-from src.deepar.deepar_core import train_predictor
+from src.deepar.deepar_core import predictor_path, train_predictor, MODELS_PATH
 
 import logging
+import os
 
 
 def deepar_training_confs(region_df_dict):
@@ -16,7 +16,8 @@ def deepar_training_confs(region_df_dict):
 
 
 def train_to_compare_3_ways(max_epochs, learning_rate):
-    region_df_dict = pickle.load(open(files.REGION_DF_DICT, "rb"))
+    with open(files.REGION_DF_DICT, "rb") as f:
+        region_df_dict = pickle.load(f)
     training_confs = deepar_training_confs(region_df_dict)
 
     for conf in training_confs:
@@ -42,3 +43,22 @@ def deepar_training_logging(region_df_dict, region_list, feat_dynamic_cols, max_
         cov_str = ""
 
     logging.info(f"Training model for {region_str} with {max_epochs} epochs and lr of {learning_rate}{cov_str}.")
+
+
+def train_idf_n_times(max_epochs, learning_rate, n_trainings):
+    with open(files.REGION_DF_DICT, "rb") as f:
+        region_df_dict = pickle.load(f)
+
+    regions_list = [md.IDF]
+    feat_dynamic_cols = None
+
+    nth_model_training_path = predictor_path(
+        region_df_dict, regions_list, max_epochs, learning_rate, feat_dynamic_cols, trial_number=n_trainings)
+    model_dir, nth_model_name = os.path.split(nth_model_training_path)
+
+    while True:
+        if nth_model_name in os.listdir(MODELS_PATH):
+            break
+        train_predictor(region_df_dict, md.END_TRAIN_DATE, regions_list, max_epochs, learning_rate,
+                        c.EnergyConso.CONSUMPTION, feat_dynamic_cols=feat_dynamic_cols)
+
