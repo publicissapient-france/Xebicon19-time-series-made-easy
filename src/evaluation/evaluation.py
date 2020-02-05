@@ -16,6 +16,8 @@ from src.evaluation.deepar_plots import plot_forecasts
 from src.deepar.deepar_train import deepar_training_confs
 from src.deepar.deepar_core import predictor_path, make_predictions
 
+DEEPAR_PLOTS = files.create_folder(os.path.join(files.PLOTS, "deepar"))
+
 
 def evaluate_models():
     region_df_dict = pickle.load(open(files.REGION_DF_DICT, "rb"))
@@ -31,11 +33,12 @@ def evaluate_models():
     deepar_confs = deepar_training_confs(region_df_dict)
     for deepar_conf in deepar_confs:
         forecasts, tss, model_pkl_path = prepare_data_for_deepar_plot(
-            region_df_dict, deepar_conf["region_list"], deepar_conf["feat_dynamic_cols"], md.MAX_EPOCHS,
-            md.LEARNING_RATE)
+            region_df_dict, deepar_conf["region_list"], deepar_conf["feat_dynamic_cols"],
+            os.getenv("TEST_MAX_EPOCHS", md.MAX_EPOCHS), md.LEARNING_RATE)
 
+        fig_path = os.path.join(DEEPAR_PLOTS, f"{Path(model_pkl_path).name}.png")
         plot_forecasts(region_df_dict, md.END_TRAIN_DATE, tss, forecasts, past_length=2 * md.NB_HOURS_PRED,
-                       figname=Path(model_pkl_path).name)
+                       fig_path=fig_path)
 
 
 def prepare_data_for_prophet_plot(df_idf, model_name):
@@ -63,10 +66,11 @@ def prepare_data_for_prophet_plot(df_idf, model_name):
     return df_idf_plot, mape, energy_forecast_idf
 
 
-def prepare_data_for_deepar_plot(region_df_dict, regions_list, feat_dynamic_cols, max_epochs, learning_rate):
+def prepare_data_for_deepar_plot(region_df_dict, regions_list, feat_dynamic_cols, max_epochs, learning_rate,
+                                 trial_number=1):
     model_pkl_path = predictor_path(
-        region_df_dict, regions_list, os.getenv("TEST_MAX_EPOCHS", max_epochs), learning_rate, feat_dynamic_cols,
-        trial_number=1)
+        region_df_dict, regions_list, max_epochs, learning_rate, feat_dynamic_cols,
+        trial_number)
 
     with open(model_pkl_path, "rb") as model_pkl:
         deepar_model = pickle.load(model_pkl)

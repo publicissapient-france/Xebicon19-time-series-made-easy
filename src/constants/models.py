@@ -12,3 +12,4 @@ MAX_EPOCHS = 30
 
 IDF = "Ile-de-France"
 
+DEEPAR_MAX_EPOCHS_LIST_STR = "[20, 40, 60, 80, 100]"
