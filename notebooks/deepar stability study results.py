@@ -64,8 +64,8 @@ results["MAPE_pct"] = results["MAPE"].apply(lambda x: round(100*x, 2))
 var_df = results.groupby("max_epochs").agg({"MAPE_pct": np.std})
 
 var_df.head(100)
-# -
 
+# +
 import seaborn as sns
 
 matplotlib.rcParams.update({'font.size': 22})
@@ -77,6 +77,7 @@ plt.ylabel("MAPE (%)")
 plt.ylim([0, 25])
 plt.title("Distribution of MAPE on January 1st prediction for 10 trainings")
 plt.savefig(results_path + "max_epochs_stability_boxplot.png")
+# -
 
 results_pred = pd.read_csv("./deepar_stability_study/sample_prediction_results.csv", sep=";")
 

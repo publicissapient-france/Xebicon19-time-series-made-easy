@@ -11,3 +11,4 @@ pystan
 fbprophet
 plotly
 tqdm
+seaborn

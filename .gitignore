@@ -8,6 +8,8 @@ src/deepar/models/*
 src/prophet/models/*
 src/deepar/models_TEST/*
 src/prophet/models_TEST/*
+data/output/deepar_stability_study_TEST/*
+data/output/deepar_stability_study/plots/*
 __pycache__
 *.pyc
 
