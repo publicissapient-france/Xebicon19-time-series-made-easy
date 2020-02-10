@@ -81,7 +81,8 @@ def predictor_path(region_df_dict, regions_list, max_epochs, learning_rate, feat
     return os.path.join(MODELS_PATH, current_predictor_name)
 
 
-def make_predictions(predictor, region_df_dict, test_date, regions_list, target_col, feat_dynamic_cols=None):
+def make_predictions(predictor, region_df_dict, test_date, regions_list, target_col, feat_dynamic_cols=None,
+                     num_eval_samples=100):
     if feat_dynamic_cols is not None:
         test_data = ListDataset(
             [{"item_id": region,
@@ -104,7 +105,7 @@ def make_predictions(predictor, region_df_dict, test_date, regions_list, target_
             freq=md.FREQ
         )
 
-    forecast_it, ts_it = make_evaluation_predictions(test_data, predictor=predictor, num_eval_samples=100)
+    forecast_it, ts_it = make_evaluation_predictions(test_data, predictor=predictor, num_eval_samples=num_eval_samples)
 
     return list(forecast_it), list(ts_it)
 

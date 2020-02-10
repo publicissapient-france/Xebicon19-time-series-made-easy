@@ -67,7 +67,7 @@ def prepare_data_for_prophet_plot(df_idf, model_name):
 
 
 def prepare_data_for_deepar_plot(region_df_dict, regions_list, feat_dynamic_cols, max_epochs, learning_rate,
-                                 trial_number=1):
+                                 trial_number=1, num_eval_samples=100):
     model_pkl_path = predictor_path(
         region_df_dict, regions_list, max_epochs, learning_rate, feat_dynamic_cols,
         trial_number)
@@ -77,6 +77,6 @@ def prepare_data_for_deepar_plot(region_df_dict, regions_list, feat_dynamic_cols
 
     forecasts, tss = make_predictions(
         deepar_model, region_df_dict, md.END_TRAIN_DATE, [md.IDF], target_col=c.EnergyConso.CONSUMPTION,
-        feat_dynamic_cols=feat_dynamic_cols)
+        feat_dynamic_cols=feat_dynamic_cols, num_eval_samples=num_eval_samples)
 
     return forecasts, tss, model_pkl_path

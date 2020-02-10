@@ -3,7 +3,9 @@ from src.evaluation.plots import plot_consumptions
 from src.deepar.deepar_train import train_to_compare_3_ways, train_idf_n_times
 from src.prophet.prophet_train import prophet_train
 from src.evaluation.evaluation import evaluate_models
-from src.evaluation.deepar_stability_study import run_model_stability_study, plot_model_stability_study_results
+from src.evaluation.deepar_stability_study import (
+    run_model_stability_study, plot_model_stability_study_results, run_num_eval_samples_stability_study,
+    plot_num_eval_samples_study_results)
 
 import src.constants.models as md
 
@@ -37,6 +39,9 @@ def main(bool_dict):
         nb_trials = eval(os.getenv("MAX_NB_TRAININGS", md.MAX_NB_TRAININGS))
         run_model_stability_study(max_epoch_list, nb_trials)
         plot_model_stability_study_results(max_epoch_list, nb_trials)
+
+        run_num_eval_samples_stability_study(max_epoch_list[0], trial_nb=1)
+        plot_num_eval_samples_study_results(max_epoch_list[0], trial_nb=1)
 
 
 if __name__ == "__main__":
