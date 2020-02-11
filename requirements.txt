@@ -12,3 +12,4 @@ fbprophet
 plotly
 tqdm
 seaborn
+statsmodels
