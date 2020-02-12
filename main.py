@@ -6,6 +6,7 @@ from src.evaluation.evaluation import evaluate_models
 from src.evaluation.deepar_stability_study import (
     run_model_stability_study, plot_model_stability_study_results, run_num_eval_samples_stability_study,
     plot_num_eval_samples_study_results)
+from src.sarima.sarima_train import sarima_train
 
 import src.constants.models as md
 
@@ -43,6 +44,9 @@ def main(bool_dict):
         run_num_eval_samples_stability_study(max_epoch_list[0], trial_nb=1)
         plot_num_eval_samples_study_results(max_epoch_list[0], trial_nb=1)
 
+    if bool_dict["run_arima_training"]:
+        sarima_train()
+
 
 if __name__ == "__main__":
     bool_dict = {"preprocess_data": False,
@@ -50,5 +54,6 @@ if __name__ == "__main__":
                  "train_prophet": False,
                  "evaluate": False,
                  "multiple_deepar_trainings": False,
-                 "run_deepar_stability_study": True}
+                 "run_deepar_stability_study": False,
+                 "run_arima_training": True}
     main(bool_dict)

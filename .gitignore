@@ -10,6 +10,8 @@ src/deepar/models_TEST/*
 src/prophet/models_TEST/*
 data/output/deepar_stability_study_TEST/*
 data/output/deepar_stability_study/plots/*
+src/sarima/models_TEST/*
+src/sarima/plots_TEST/*
 __pycache__
 *.pyc
 

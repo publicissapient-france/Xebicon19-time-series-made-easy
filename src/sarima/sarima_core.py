@@ -1,6 +1,7 @@
 import pandas as pd
 import matplotlib.pyplot as plt
-from tqdm import tqdm
+import seaborn as sns
+import logging
 
 import statsmodels.tsa.api as smt
 import statsmodels.api as sm
@@ -8,7 +9,7 @@ import statsmodels.api as sm
 import src.constants.columns as c
 
 
-def tsplot(y, lags=None, figsize=(12, 7), style='bmh'):
+def tsplot(y, lags=None, figsize=(12, 7), style='bmh', filename=None):
     """
         Plot time series, its ACF and PACF, calculate Dickey–Fuller test
 
@@ -31,18 +32,24 @@ def tsplot(y, lags=None, figsize=(12, 7), style='bmh'):
         smt.graphics.plot_acf(y, lags=lags, ax=acf_ax)
         smt.graphics.plot_pacf(y, lags=lags, ax=pacf_ax)
         plt.tight_layout()
+        if filename is not None:
+            plt.savefig(filename)
+        plt.close()
 
 
-def optimize_arima(parameters_list, d, D, s):
+def optimize_arima(idf_train, parameters_list, d, D, s):
     results = []
     best_aic = float("inf")
 
-    for param in tqdm(parameters_list):
+    for param in parameters_list:
         # we need try-except because on some combinations model fails to converge
         try:
+            logging.info(
+                f"Fitting SARIMAX with order {(param[0], d, param[1])} and seasonal order {(param[2], D, param[3], s)}")
             model = sm.tsa.statespace.SARIMAX(idf_train[c.EnergyConso.CONSUMPTION], order=(param[0], d, param[1]),
                                               seasonal_order=(param[2], D, param[3], s)).fit(disp=-1)
         except:
+            logging.info("Model failed to converge.")
             continue
         aic = model.aic
         # saving best model, AIC and parameters
