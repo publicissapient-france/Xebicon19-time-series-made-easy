@@ -25,9 +25,9 @@ def sarima_train():
 
     plot_stat_tests(idf_train)
 
-    ps = range(1, int(os.getenv("MAX_ARIMA_PARAM_RANGE", 5)))
+    ps = range(1, int(os.getenv("MAX_ARIMA_PARAM_RANGE", 4)))
     d = 1
-    qs = range(1, int(os.getenv("MAX_ARIMA_PARAM_RANGE", 5)))
+    qs = range(1, int(os.getenv("MAX_ARIMA_PARAM_RANGE", 3)))
     Ps = range(1, int(os.getenv("MAX_ARIMA_PARAM_RANGE", 3)))
     D = 1
     Qs = range(1, int(os.getenv("MAX_ARIMA_PARAM_RANGE", 3)))
@@ -47,6 +47,9 @@ def sarima_train():
 
     with open(os.path.join(MODELS_PATH, "best_model_summary.txt"), "w") as file:
         file.write(best_model.summary().as_csv())
+
+    with open(os.path.join(MODELS_PATH, "best_model.pkl"), "wb") as file:
+        pickle.dump(best_model, file)
 
     figure = plt.figure(1, figsize=(15, 12))
     best_model.plot_diagnostics(fig=figure)
