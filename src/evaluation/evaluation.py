@@ -15,6 +15,8 @@ from src.evaluation.prophet_plots import plot_prophet_forecast
 from src.evaluation.deepar_plots import plot_forecasts
 from src.deepar.deepar_train import deepar_training_confs
 from src.deepar.deepar_core import predictor_path, make_predictions
+from src.sarima.sarima_train import MODELS_PATH as SARIMA_MODELS_PATH
+from src.evaluation.sarima_plots import plot_sarima_forecast
 
 DEEPAR_PLOTS = files.create_folder(os.path.join(files.PLOTS, "deepar"))
 
@@ -39,6 +41,10 @@ def evaluate_models():
         fig_path = os.path.join(DEEPAR_PLOTS, f"{Path(model_pkl_path).name}.png")
         plot_forecasts(region_df_dict, md.END_TRAIN_DATE, tss, forecasts, past_length=2 * md.NB_HOURS_PRED,
                        fig_path=fig_path)
+
+    if os.path.exists(os.path.join(SARIMA_MODELS_PATH, "best_model.pkl")):
+        logging.info("Plotting Sarima forecasts.")
+        plot_sarima_forecast(df_idf)
 
 
 def prepare_data_for_prophet_plot(df_idf, model_name):

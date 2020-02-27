@@ -26,9 +26,6 @@ def main(bool_dict):
     if bool_dict["train_prophet"]:
         prophet_train()
 
-    if bool_dict["evaluate"]:
-        evaluate_models()
-
     if bool_dict["multiple_deepar_trainings"]:
         logging.info("Training deepar multiple times to test stability.")
         for max_epochs in eval(os.getenv("TEST_MAX_EPOCH_LIST", md.DEEPAR_MAX_EPOCH_LIST_STR)):
@@ -47,13 +44,16 @@ def main(bool_dict):
     if bool_dict["run_arima_training"]:
         sarima_train()
 
+    if bool_dict["evaluate"]:
+        evaluate_models()
+
 
 if __name__ == "__main__":
     bool_dict = {"preprocess_data": False,
                  "train_deepar": False,
                  "train_prophet": False,
-                 "evaluate": False,
                  "multiple_deepar_trainings": False,
                  "run_deepar_stability_study": False,
-                 "run_arima_training": True}
+                 "run_arima_training": False,
+                 "evaluate": True}
     main(bool_dict)
