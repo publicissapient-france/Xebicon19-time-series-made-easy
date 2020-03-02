@@ -16,7 +16,7 @@ MODELS_PATH = files.create_folder(os.path.join(SARIMA_PATH, "models" + files.TES
 PLOTS_PATH = files.create_folder(os.path.join(SARIMA_PATH, "plots" + files.TEST_SUFFIX))
 
 
-def sarima_train():
+def sarima_train(max_arima_param_range):
     region_df_dict = pickle.load(open(files.REGION_DF_DICT, "rb"))
     idf_df = region_df_dict[md.IDF]
     idf_df[c.EnergyConso.CONSUMPTION] = idf_df[c.EnergyConso.CONSUMPTION].fillna(idf_df[c.EnergyConso.CONSUMPTION].mean())
@@ -25,12 +25,12 @@ def sarima_train():
 
     plot_stat_tests(idf_train)
 
-    ps = range(1, int(os.getenv("MAX_ARIMA_PARAM_RANGE", 4)))
+    ps = range(1, max_arima_param_range)
     d = 1
-    qs = range(1, int(os.getenv("MAX_ARIMA_PARAM_RANGE", 3)))
-    Ps = range(1, int(os.getenv("MAX_ARIMA_PARAM_RANGE", 3)))
+    qs = range(1, max_arima_param_range)
+    Ps = range(1, max_arima_param_range)
     D = 1
-    Qs = range(1, int(os.getenv("MAX_ARIMA_PARAM_RANGE", 3)))
+    Qs = range(1, max_arima_param_range)
     s = 24  # season length is still 24
 
     # creating list with all the possible combinations of parameters

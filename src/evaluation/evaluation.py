@@ -21,7 +21,7 @@ from src.evaluation.sarima_plots import plot_sarima_forecast
 DEEPAR_PLOTS = files.create_folder(os.path.join(files.PLOTS, "deepar"))
 
 
-def evaluate_models():
+def evaluate_models(deepar_max_epochs):
     region_df_dict = pickle.load(open(files.REGION_DF_DICT, "rb"))
     df_idf = region_df_dict[md.IDF]
 
@@ -36,7 +36,7 @@ def evaluate_models():
     for deepar_conf in deepar_confs:
         forecasts, tss, model_pkl_path = prepare_data_for_deepar_plot(
             region_df_dict, deepar_conf["region_list"], deepar_conf["feat_dynamic_cols"],
-            os.getenv("TEST_MAX_EPOCH", md.MAX_EPOCH), md.LEARNING_RATE)
+            deepar_max_epochs, md.LEARNING_RATE)
 
         fig_path = os.path.join(DEEPAR_PLOTS, f"{Path(model_pkl_path).name}.png")
         plot_forecasts(region_df_dict, md.END_TRAIN_DATE, tss, forecasts, past_length=2 * md.NB_HOURS_PRED,

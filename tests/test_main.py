@@ -1,4 +1,4 @@
-from main import main
+from main import main, TDV
 
 
 def test_main():
@@ -9,4 +9,4 @@ def test_main():
                  "run_deepar_stability_study": False,
                  "run_arima_training": True,
                  "evaluate": True}
-    main(bool_dict)
+    main(bool_dict, TDV)
