@@ -18,7 +18,7 @@ def preprocess_meteo_data():
     logging.info("Preprocessing meteo data.")
     main_meteo = (pd.read_csv(files.MAIN_METEO, parse_dates=[c.Meteo.DATE])
         .rename(columns={"MAX_TEMP": c.Meteo.MAX_TEMP_PARIS})[[c.Meteo.DATE, c.Meteo.MAX_TEMP_PARIS]])
-    last_meteo_paris = (pd.read_csv(files.LAST_METEO_PARIS, sep=";", parse_dates=[c.Meteo.DATE])
+    last_meteo_paris = (pd.read_csv(files.LAST_METEO_PARIS, parse_dates=[c.Meteo.DATE])
                         .rename(columns={"MAX_TEMP": c.Meteo.MAX_TEMP_PARIS}))
     full_meteo = pd.concat([main_meteo, last_meteo_paris], axis=0)
 
@@ -29,9 +29,13 @@ def preprocess_energy_consumption_data():
     if not os.path.exists(files.ENERGY_CONSUMPTION):
         logging.info("Downloading energy raw data.")
         download_url(files.ENERGY_CONSUMPTION_URL, os.path.join(files.RAW_DATA, files.ENERGY_CONSUMPTION))
+        logging.info("Replacing ; separator by comma.")
+        # Replace ; sep by ,
+        df = pd.read_csv(files.ENERGY_CONSUMPTION, sep=";")
+        df.to_csv(files.ENERGY_CONSUMPTION, sep=",", index=False)
     logging.info("Reading energy consumption raw data.")
     df = (pd.read_csv(
-        files.ENERGY_CONSUMPTION, sep=";", parse_dates=[c.EnergyConso.TIMESTAMP],
+        files.ENERGY_CONSUMPTION, parse_dates=[c.EnergyConso.TIMESTAMP],
         usecols=[c.EnergyConso.REGION, c.EnergyConso.TIMESTAMP, c.EnergyConso.CONSUMPTION])
         .sort_values(by=[c.EnergyConso.REGION, c.EnergyConso.TIMESTAMP])
     )

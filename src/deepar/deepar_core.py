@@ -12,9 +12,7 @@ import src.constants.files as files
 
 import logging
 
-
-DEEPAR_PATH = os.path.dirname(os.path.abspath(__file__))
-MODELS_PATH = files.create_folder(os.path.join(DEEPAR_PATH, "models" + files.TEST_SUFFIX))
+DEEPAR_MODELS_PATH = files.create_folder(os.path.join(files.MODELS, "deepar"))
 
 
 def train_predictor(region_df_dict, end_train_date, regions_list, max_epochs, learning_rate, target_col,
@@ -72,13 +70,13 @@ def predictor_path(region_df_dict, regions_list, max_epochs, learning_rate, feat
         current_predictor_name += "_" + "_".join(feat_dynamic_cols)
     # Add 1 to max existing trial number if trial_number is not specified in keywords
     if trial_number is None:
-        existing_models = os.listdir(MODELS_PATH)
+        existing_models = os.listdir(DEEPAR_MODELS_PATH)
         old_trials_for_same_predictor = [model for model in existing_models if model.startswith(current_predictor_name)]
         last_trial_nb = len(old_trials_for_same_predictor)
     else:
         last_trial_nb = trial_number - 1
     current_predictor_name = current_predictor_name + "_trial_{}".format(last_trial_nb + 1)
-    return os.path.join(MODELS_PATH, current_predictor_name)
+    return os.path.join(DEEPAR_MODELS_PATH, current_predictor_name)
 
 
 def make_predictions(predictor, region_df_dict, test_date, regions_list, target_col, feat_dynamic_cols=None,

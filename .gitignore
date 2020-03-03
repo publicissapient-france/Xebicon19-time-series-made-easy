@@ -4,6 +4,8 @@
 *.pkl
 *.ipynb
 
+data_test/*
+
 src/deepar/models/*
 src/prophet/models/*
 src/deepar/models_TEST/*

@@ -3,7 +3,7 @@ import pickle
 import src.constants.files as files
 import src.constants.models as md
 import src.constants.columns as c
-from src.deepar.deepar_core import predictor_path, train_predictor, MODELS_PATH
+from src.deepar.deepar_core import predictor_path, train_predictor, DEEPAR_MODELS_PATH
 
 import logging
 import os
@@ -57,7 +57,7 @@ def train_idf_n_times(max_epochs, learning_rate, n_trainings):
     model_dir, nth_model_name = os.path.split(nth_model_training_path)
 
     while True:
-        if nth_model_name in os.listdir(MODELS_PATH):
+        if nth_model_name in os.listdir(DEEPAR_MODELS_PATH):
             break
         train_predictor(region_df_dict, md.END_TRAIN_DATE, regions_list, max_epochs, learning_rate,
                         c.EnergyConso.CONSUMPTION, feat_dynamic_cols=feat_dynamic_cols)

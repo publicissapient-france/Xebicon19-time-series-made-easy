@@ -9,6 +9,9 @@ from src.evaluation.deepar_stability_study import (
 from src.sarima.sarima_train import sarima_train
 
 import src.constants.models as md
+import src.constants.files as files
+
+from tests.prepare_raw_test_data import prepare_raw_test_data
 
 import os
 import logging
@@ -35,6 +38,13 @@ def main(bool_dict, tdv):
     keeping this "free" integration test.
     :return:
     """
+    logging.info("Launching main.")
+
+    if files.TEST_SUFFIX != "":
+        # A test is running.
+        prepare_raw_test_data()
+
+
     if bool_dict["preprocess_data"]:
         preprocess_meteo_data()
         region_df_dict = preprocess_energy_consumption_data()
