@@ -11,9 +11,8 @@ import src.constants.columns as c
 
 from src.sarima.sarima_core import tsplot, optimize_arima
 
-SARIMA_PATH = os.path.dirname(os.path.abspath(__file__))
-MODELS_PATH = files.create_folder(os.path.join(SARIMA_PATH, "models" + files.TEST_SUFFIX))
-PLOTS_PATH = files.create_folder(os.path.join(SARIMA_PATH, "plots" + files.TEST_SUFFIX))
+SARIMA_MODELS_PATH = files.create_folder(os.path.join(files.MODELS, "sarima"))
+PLOTS_PATH = SARIMA_MODELS_PATH
 
 
 def sarima_train(max_arima_param_range):
@@ -38,17 +37,18 @@ def sarima_train(max_arima_param_range):
 
     result_table = optimize_arima(idf_train, parameters_list, d, D, s)
 
-    result_table.to_csv(os.path.join(MODELS_PATH, "arima_optimization_results.csv"), index=False)
+    result_table.to_csv(os.path.join(SARIMA_MODELS_PATH, "arima_optimization_results.csv"), index=False)
 
     p, q, P, Q = result_table.parameters[0]
 
     best_model = sm.tsa.statespace.SARIMAX(idf_train[c.EnergyConso.CONSUMPTION], order=(p, d, q),
                                            seasonal_order=(P, D, Q, s)).fit(disp=-1)
 
-    with open(os.path.join(MODELS_PATH, "best_model_summary.txt"), "w") as file:
+    with open(os.path.join(SARIMA_MODELS_PATH, "best_model_summary.txt"), "w") as file:
+        # TODO: Write best model with sarima api because pkl file gets too large (6.6 GB)
         file.write(best_model.summary().as_csv())
 
-    with open(os.path.join(MODELS_PATH, "best_model.pkl"), "wb") as file:
+    with open(os.path.join(SARIMA_MODELS_PATH, "best_model.pkl"), "wb") as file:
         pickle.dump(best_model, file)
 
     figure = plt.figure(1, figsize=(15, 12))

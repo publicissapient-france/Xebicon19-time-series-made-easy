@@ -5,6 +5,7 @@
 *.ipynb
 
 data_test/*
+data/models/*
 
 src/deepar/models/*
 src/prophet/models/*

@@ -41,7 +41,7 @@ import src.constants.models as md
 from src.prophet.prophet_train import *
 # -
 
-with open(os.path.join(MODELS_PATH, files.PROPHET_2_YEARS_MODEL), "rb") as file:
+with open(os.path.join(PROPHET_MODELS_PATH, files.PROPHET_2_YEARS_MODEL), "rb") as file:
     model_2_years = pickle.load(file)
 
 future_idf_energy_date_2019 = model_2_years.make_future_dataframe(

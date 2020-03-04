@@ -62,7 +62,7 @@ def main(bool_dict, tdv):
             train_idf_n_times(max_epochs, md.LEARNING_RATE, n_trainings=tdv["max_nb_trainings"])
 
     if bool_dict["run_deepar_stability_study"]:
-        run_model_stability_study()
+        run_model_stability_study(tdv["max_epochs_list"], tdv["max_nb_trainings"])
         plot_model_stability_study_results(tdv["max_epochs_list"], tdv["max_nb_trainings"])
 
         run_num_eval_samples_stability_study(tdv["max_epochs_list"][0], trial_nb=1)

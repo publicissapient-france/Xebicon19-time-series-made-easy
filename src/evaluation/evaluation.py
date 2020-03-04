@@ -10,12 +10,12 @@ import src.constants.files as files
 import src.constants.models as md
 import src.constants.columns as c
 from src.core import mean_absolute_percentage_error
-from src.prophet.prophet_train import MODELS_PATH
+from src.prophet.prophet_train import PROPHET_MODELS_PATH
 from src.evaluation.prophet_plots import plot_prophet_forecast
 from src.evaluation.deepar_plots import plot_forecasts
 from src.deepar.deepar_train import deepar_training_confs
 from src.deepar.deepar_core import predictor_path, make_predictions
-from src.sarima.sarima_train import MODELS_PATH as SARIMA_MODELS_PATH
+from src.sarima.sarima_train import SARIMA_MODELS_PATH as SARIMA_MODELS_PATH
 from src.evaluation.sarima_plots import plot_sarima_forecast
 
 DEEPAR_PLOTS = files.create_folder(os.path.join(files.PLOTS, "deepar"))
@@ -48,7 +48,7 @@ def evaluate_models(deepar_max_epochs):
 
 
 def prepare_data_for_prophet_plot(df_idf, model_name):
-    with open(os.path.join(MODELS_PATH, model_name), "rb") as file:
+    with open(os.path.join(PROPHET_MODELS_PATH, model_name), "rb") as file:
         model_energy = pickle.load(file)
 
     future_dates_for_forecast = model_energy.make_future_dataframe(

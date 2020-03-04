@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 import matplotlib
 import numpy as np
 
-from src.sarima.sarima_train import MODELS_PATH as SARIMA_MODELS_PATH
+from src.sarima.sarima_train import SARIMA_MODELS_PATH as SARIMA_MODELS_PATH
 
 import src.constants.files as files
 import src.constants.models as md

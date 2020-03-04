@@ -15,7 +15,7 @@ from src.evaluation.evaluation import prepare_data_for_deepar_plot
 from src.evaluation.deepar_plots import plot_forecasts
 
 STABILITY_STUDY_PATH = files.create_folder(
-    os.path.join(files.OUTPUT_DATA, f"deepar_stability_study{files.TEST_SUFFIX}"))
+    os.path.join(files.OUTPUT_DATA, "deepar_stability_study"))
 
 MODEL_STABILITY_STUDY_PLOTS = files.create_folder(os.path.join(STABILITY_STUDY_PATH, "model_stability_study_plots"))
 

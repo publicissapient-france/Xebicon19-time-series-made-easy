@@ -30,9 +30,9 @@ logging.getLogger('').addHandler(console)
 RAW_DATA = create_folder(os.path.join(DATA_PATH, "raw"))
 INTERIM_DATA = create_folder(os.path.join(DATA_PATH, "interim"))
 OUTPUT_DATA = create_folder(os.path.join(DATA_PATH, "output"))
+MODELS = create_folder(os.path.join(DATA_PATH, "models"))
 
 PLOTS = create_folder(os.path.join(OUTPUT_DATA, "plots"))
-MODELS = create_folder(os.path.join(OUTPUT_DATA, "models"))
 
 ENERGY_CONSUMPTION_URL = "https://opendata.reseaux-energies.fr/explore/dataset/eco2mix-regional-cons-def/download/?format=csv&timezone=Europe/Paris&use_labels_for_header=true&csv_separator=%3B"
 
