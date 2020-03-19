@@ -1,13 +1,22 @@
-import matplotlib
-import matplotlib.pyplot as plt
+from datetime import datetime, timedelta
 from pandas.plotting import register_matplotlib_converters
 register_matplotlib_converters()
+import matplotlib
+import matplotlib.pyplot as plt
 import os
 import numpy as np
+from statsmodels.tsa.statespace.sarimax import SARIMAXResults
 
+from src.core import mean_absolute_percentage_error
 import src.constants.columns as c
 import src.constants.files as files
-# TODO: Mettre toutes les fonctions de plot dans ce module
+import src.constants.models as md
+from src.sarima.sarima_train import SARIMA_MODELS_PATH as SARIMA_MODELS_PATH
+
+
+DEEPAR_PLOTS = files.create_folder(os.path.join(files.PLOTS, "deepar"))
+PROPHET_PLOTS = files.create_folder(os.path.join(files.PLOTS, "prophet"))
+SARIMA_PLOTS = files.create_folder(os.path.join(files.PLOTS, "sarima"))
 
 
 def plot_consumptions(region_df_dict, year, month):
@@ -28,7 +37,92 @@ def plot_consumptions(region_df_dict, year, month):
     plt.close()
 
 
-def plot_arima(serie_test, series, model, n_steps):
+def plot_deepar_forecasts(df_dict, test_date, tss, forecasts, past_length, figname):
+    register_matplotlib_converters()
+    label_fontsize = 16
+
+    target = tss[0]
+    forecast = forecasts[0]
+    ax = target[-past_length:].plot(figsize=(20, 5), linewidth=2)
+    forecast.plot(color='g')
+    plt.grid(which='both')
+    plt.legend(["observations", "median prediction", "90% confidence interval", "50% confidence interval"])
+
+    results_mean = forecast.mean
+    ground_truth = df_dict[forecast.item_id][c.EnergyConso.CONSUMPTION][
+                   test_date + timedelta(hours=1):test_date + timedelta(hours=md.NB_HOURS_PRED)].values
+    mape = mean_absolute_percentage_error(ground_truth, results_mean)
+
+    plt.title(forecast.item_id + " MAPE:{}%".format(str(round(100 * mape, 1))))
+    plt.ylabel(c.EnergyConso.CONSUMPTION)
+    plt.xlabel("")
+    ax.set_xlim([test_date - timedelta(days=md.NB_HOURS_PRED / 24), test_date + timedelta(days=md.NB_HOURS_PRED / 24)])
+    ax.set_ylim([12000, 28000])
+    xticks = [test_date + timedelta(days=x) for x in [-11, -7, -3, 0, 4, 8, 12]]
+    ax.set_xticks(xticks, minor=True)
+    ax.set_xticklabels([datetime.strftime(date, "%Y-%m-%d") for date in xticks if date != test_date],
+                       minor=True, fontsize=label_fontsize)
+    ax.set_xticklabels(["", datetime.strftime(test_date, "%Y-%m-%d"), ""], minor=False,
+                       fontsize=label_fontsize)
+    yticks = np.arange(14000, 28000, step=2000)
+    ax.set_yticks(yticks)
+    ax.set_yticklabels([str(x) for x in yticks], fontsize=label_fontsize)
+    plt.savefig(os.path.join(DEEPAR_PLOTS, f"{figname}.png"))
+    plt.close()
+
+    return mape
+
+
+def plot_prophet_forecast(energy_forecast_idf, df_idf_plot, mape, figname):
+    matplotlib.rcParams.update({"font.size": 15})
+    plt.figure(figsize=(20, 5), linewidth=2)
+
+    forecast = energy_forecast_idf[energy_forecast_idf["ds"] > md.END_TRAIN_DATE]
+    model_past_fitting = energy_forecast_idf[energy_forecast_idf["ds"] <= md.END_TRAIN_DATE]
+
+    plt.plot(
+        df_idf_plot.index, df_idf_plot[c.EnergyConso.CONSUMPTION], color="steelblue", label="observations", linewidth=2)
+    plt.plot(
+        forecast["ds"], forecast["yhat"], color="g", label="forecasting", linewidth=2)
+
+    if len(model_past_fitting) > 0:
+        plt.plot(model_past_fitting["ds"], model_past_fitting["yhat"], color="g", label="fitting of past values",
+                 linestyle="dashed", linewidth=2)
+
+    plt.fill_between(forecast["ds"],
+                     forecast["yhat_lower"],
+                     forecast["yhat_upper"],
+                     color="green", alpha=0.2, label="90% confidence interval" )
+    plt.title("Prophet: Prediction for Ile de France with" + " MAPE : {}%".format(str(round(100 * mape, 1))))
+    plt.grid(which="both")
+    plt.ylim([12000, 28000])
+
+    plt.ylabel("consumption (MW)")
+    plt.rc("xtick", labelsize=10)
+    plt.rc("ytick", labelsize=10)
+    plt.rc("axes", titlesize=15)
+    plt.rc("axes", labelsize=10)
+    plt.rc("legend", fontsize=10)
+    plt.margins(0)
+    plt.legend()
+
+    plt.savefig(os.path.join(PROPHET_PLOTS, "{}.png".format(figname.replace(".pkl", ""))))
+
+    plt.close()
+
+
+def plot_sarima_forecast(idf_df):
+    idf_df[c.EnergyConso.CONSUMPTION] = idf_df[c.EnergyConso.CONSUMPTION].fillna(idf_df[c.EnergyConso.CONSUMPTION].mean())
+
+    idf_train = idf_df[md.END_TRAIN_DATE - timedelta(days=365):md.END_TRAIN_DATE]
+    idf_test = idf_df[md.END_TRAIN_DATE:md.END_TRAIN_DATE + timedelta(hours=md.NB_HOURS_PRED)]
+
+    best_model = SARIMAXResults.load(os.path.join(SARIMA_MODELS_PATH, "best_model.pkl"))
+
+    plot_sarima(idf_test, idf_train, best_model, md.NB_HOURS_PRED, s=1, d=1)
+
+
+def plot_sarima(serie_test, series, model, n_steps, s, d):
     """
         Plots model vs predicted values
 
@@ -38,40 +132,35 @@ def plot_arima(serie_test, series, model, n_steps):
 
     """
     # adding model values
-    data = series.copy()
-    data.columns = ['actual']
+    data = series[[c.EnergyConso.CONSUMPTION]].copy()
     data['arima_model'] = model.fittedvalues
-    print(data['arima_model'])
     # making a shift on s+d steps, because these values were unobserved by the model
     # due to the differentiating
     data['arima_model'][:s + d] = np.NaN
 
-    pred_uc = model.get_forecast(steps=72)
+    pred_uc = model.get_forecast(steps=n_steps)
 
     pred_ci = pred_uc.conf_int(alpha=0.1)
-    print(pred_ci)
 
     # forecasting on n_steps forward
     forecast = model.predict(start=data.shape[0], end=data.shape[0] + n_steps)
     forecast = data.arima_model.append(forecast)
-    forcast_compare = forecast['2019-01-01 00:00:00':'2019-01-03 23:00:00']
-    print(forecast)
+    forcast_compare = forecast[md.END_TRAIN_DATE:md.END_TRAIN_DATE + timedelta(hours=n_steps)]
     # calculate error, again having shifted on s+d steps from the beginning
-    error = np.mean(np.abs((serie_test[c.EnergyConso.CONSUMPTION] - forcast_compare) / serie_test[c.EnergyConso.CONSUMPTION])) * 100
+    error = np.mean(np.abs((serie_test[c.EnergyConso.CONSUMPTION] - forcast_compare)
+                           / serie_test[c.EnergyConso.CONSUMPTION])) * 100
     matplotlib.rcParams.update({'font.size': 15})
-    plt.figure(figsize=(10, 5), linewidth=2)
+    plt.figure(figsize=(20, 5), linewidth=2)
     plt.title("SARIMA: Prediction for Ile de France with MAPE: {0:.2f}%".format(error))
-    plt.plot(data.actual[-330:], color='steelblue', label='observation', linewidth=2.0)
+    plt.plot(data[c.EnergyConso.CONSUMPTION][-330:], color='steelblue', label='observation', linewidth=2.0)
     plt.plot(forcast_compare, color='g', label="forecasting", linewidth=2.0)
     # plt.axvspan(data.index[-1], forecast.index[-1], alpha=0.3, color='lightgrey')
     plt.fill_between(pred_ci.index, pred_ci.iloc[:, 0], pred_ci.iloc[:, 1], color='green', alpha=.2,
                      label='90% confidence interval')
 
     plt.plot(serie_test[c.EnergyConso.CONSUMPTION], color='steelblue', label='_nolegend_')
-    print('serie_test[c.EnergyConso.CONSUMPTION]', len(serie_test[c.EnergyConso.CONSUMPTION]))
-    print('forcast_compare', len(forcast_compare))
     plt.ylim([12000, 28000])
-    plt.ylabel("consumption (MW)")
+    plt.ylabel(c.EnergyConso.CONSUMPTION)
     plt.legend(loc=2)
     plt.margins(0)
     plt.rc('xtick', labelsize=10)
@@ -79,4 +168,7 @@ def plot_arima(serie_test, series, model, n_steps):
     plt.rc('axes', titlesize=15)
     plt.rc('axes', labelsize=10)
     plt.rc('legend', fontsize=10)
-    plt.grid(True);
+    plt.grid(True)
+
+    plt.savefig(os.path.join(SARIMA_PLOTS, f"sarima_pred_{int(n_steps/24)}_days.png"))
+    plt.close()

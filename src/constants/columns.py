@@ -1,8 +1,3 @@
-import os
-
-NROWS = int(os.getenv("NROWS", 10**9)) # takes value specified in pytest.ini file when launching tests.
-
-
 class EnergyConso:
     TIMESTAMP = "Date - Heure"
 

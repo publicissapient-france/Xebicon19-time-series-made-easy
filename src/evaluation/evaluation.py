@@ -11,14 +11,12 @@ import src.constants.models as md
 import src.constants.columns as c
 from src.core import mean_absolute_percentage_error
 from src.prophet.prophet_train import PROPHET_MODELS_PATH
-from src.evaluation.prophet_plots import plot_prophet_forecast
-from src.evaluation.deepar_plots import plot_forecasts
+from src.evaluation.plots import plot_prophet_forecast
+from src.evaluation.plots import plot_deepar_forecasts
 from src.deepar.deepar_train import deepar_training_confs
 from src.deepar.deepar_core import predictor_path, make_predictions
 from src.sarima.sarima_train import SARIMA_MODELS_PATH as SARIMA_MODELS_PATH
-from src.evaluation.sarima_plots import plot_sarima_forecast
-
-DEEPAR_PLOTS = files.create_folder(os.path.join(files.PLOTS, "deepar"))
+from src.evaluation.plots import plot_sarima_forecast
 
 
 def evaluate_models(deepar_max_epochs):
@@ -29,7 +27,11 @@ def evaluate_models(deepar_max_epochs):
     for model_name in [files.PROPHET_2_YEARS_MODEL, files.PROPHET_2_YEARS_WEATHER_MODEL]:
         df_idf_plot, mape, energy_forecast_idf = prepare_data_for_prophet_plot(df_idf, model_name)
 
-        plot_prophet_forecast(energy_forecast_idf, df_idf_plot, mape, figname=model_name)
+        # Plot with forecasting only to show discontinuity of predictions.
+        plot_prophet_forecast(
+            energy_forecast_idf[energy_forecast_idf["ds"] > md.END_TRAIN_DATE], df_idf_plot, mape, figname=model_name)
+        # Plot full model fitting to show hidden continuity.
+        plot_prophet_forecast(energy_forecast_idf, df_idf_plot, mape, figname=model_name + "_full_fitting")
 
     logging.info("Plotting Deepar forecasts.")
     deepar_confs = deepar_training_confs(region_df_dict)
@@ -38,9 +40,9 @@ def evaluate_models(deepar_max_epochs):
             region_df_dict, deepar_conf["region_list"], deepar_conf["feat_dynamic_cols"],
             deepar_max_epochs, md.LEARNING_RATE)
 
-        fig_path = os.path.join(DEEPAR_PLOTS, f"{Path(model_pkl_path).name}.png")
-        plot_forecasts(region_df_dict, md.END_TRAIN_DATE, tss, forecasts, past_length=2 * md.NB_HOURS_PRED,
-                       fig_path=fig_path)
+        figname = Path(model_pkl_path).name
+        plot_deepar_forecasts(region_df_dict, md.END_TRAIN_DATE, tss, forecasts, past_length=2 * md.NB_HOURS_PRED,
+                              figname=figname)
 
     if os.path.exists(os.path.join(SARIMA_MODELS_PATH, "best_model.pkl")):
         logging.info("Plotting Sarima forecasts.")
@@ -52,20 +54,25 @@ def prepare_data_for_prophet_plot(df_idf, model_name):
         model_energy = pickle.load(file)
 
     future_dates_for_forecast = model_energy.make_future_dataframe(
-        periods=md.NB_HOURS_PRED, freq=md.FREQ, include_history=False)
+        periods=md.NB_HOURS_PRED, freq=md.FREQ, include_history=True)
     # Add temp covariate
     future_dates_for_forecast = pd.merge(
         future_dates_for_forecast, df_idf[[c.Meteo.MAX_TEMP_PARIS]], left_on="ds", right_index=True, how="left")
 
     energy_forecast_idf = model_energy.predict(future_dates_for_forecast)
+    energy_forecast_idf = energy_forecast_idf[
+        (energy_forecast_idf["ds"] <= md.END_TRAIN_DATE + timedelta(hours=md.NB_HOURS_PRED))
+        & (energy_forecast_idf["ds"] >= md.END_TRAIN_DATE - timedelta(hours=md.NB_HOURS_PRED))].copy()
 
     df_idf_plot = df_idf[(df_idf.index <= md.END_TRAIN_DATE + timedelta(hours=md.NB_HOURS_PRED))
                          & (df_idf.index >= md.END_TRAIN_DATE - timedelta(hours=md.NB_HOURS_PRED))].copy()
 
     y_true = df_idf[
         (df_idf.index > md.END_TRAIN_DATE)
-        & (df_idf.index <= md.END_TRAIN_DATE + timedelta(hours=md.NB_HOURS_PRED))][c.EnergyConso.CONSUMPTION]
-    y_pred = energy_forecast_idf['yhat']
+        & (df_idf.index < md.END_TRAIN_DATE + timedelta(hours=md.NB_HOURS_PRED))][c.EnergyConso.CONSUMPTION]
+    y_pred = energy_forecast_idf[
+        (energy_forecast_idf["ds"] > md.END_TRAIN_DATE)
+        & (energy_forecast_idf["ds"] < md.END_TRAIN_DATE + timedelta(hours=md.NB_HOURS_PRED))]['yhat']
 
     mape = mean_absolute_percentage_error(y_true, y_pred)
 

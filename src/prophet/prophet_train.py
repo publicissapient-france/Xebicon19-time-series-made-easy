@@ -19,8 +19,6 @@ def prophet_train():
     df_dict = region_df_dict[md.IDF]
 
     df_prophet_train = format_training_data(df_dict, md.START_TRAIN_DATE, md.END_TRAIN_DATE)
-    # Limit nb of rows for tests
-    df_prophet_train = df_prophet_train.iloc[:min(len(df_prophet_train), c.NROWS)]
 
     logging.info("Training Prophet model on 2 years.")
     start_time = time()

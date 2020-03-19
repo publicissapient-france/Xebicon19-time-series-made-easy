@@ -1,3 +1,6 @@
+from pandas.plotting import register_matplotlib_converters
+register_matplotlib_converters()
+
 from src.preprocess import preprocess_meteo_data, preprocess_energy_consumption_data
 from src.evaluation.plots import plot_consumptions
 from src.deepar.deepar_train import train_to_compare_3_ways, train_idf_n_times
@@ -15,7 +18,6 @@ from tests.prepare_raw_test_data import prepare_raw_test_data
 
 import os
 import logging
-# TODO: refacto methode de test, fork cookiecutter, KED, article.
 
 
 TDV = {

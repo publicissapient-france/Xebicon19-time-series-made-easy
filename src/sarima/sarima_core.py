@@ -16,6 +16,8 @@ def tsplot(y, lags=None, figsize=(12, 7), style='bmh', filename=None):
         y - timeseries
         lags - how many lags to include in ACF, PACF calculation
     """
+    pd.plotting.register_matplotlib_converters()
+
     if not isinstance(y, pd.Series):
         y = pd.Series(y)
 

@@ -45,11 +45,9 @@ def sarima_train(max_arima_param_range):
                                            seasonal_order=(P, D, Q, s)).fit(disp=-1)
 
     with open(os.path.join(SARIMA_MODELS_PATH, "best_model_summary.txt"), "w") as file:
-        # TODO: Write best model with sarima api because pkl file gets too large (6.6 GB)
         file.write(best_model.summary().as_csv())
 
-    with open(os.path.join(SARIMA_MODELS_PATH, "best_model.pkl"), "wb") as file:
-        pickle.dump(best_model, file)
+    best_model.save(os.path.join(SARIMA_MODELS_PATH, "best_model.pkl"))
 
     figure = plt.figure(1, figsize=(15, 12))
     best_model.plot_diagnostics(fig=figure)

@@ -12,7 +12,7 @@ import src.constants.files as files
 import src.constants.models as md
 
 from src.evaluation.evaluation import prepare_data_for_deepar_plot
-from src.evaluation.deepar_plots import plot_forecasts
+from src.evaluation.plots import plot_deepar_forecasts
 
 STABILITY_STUDY_PATH = files.create_folder(
     os.path.join(files.OUTPUT_DATA, "deepar_stability_study"))
@@ -46,7 +46,7 @@ def run_model_stability_study(max_epoch_list, nb_trials):
                 region_df_dict, [md.IDF], None, max_epoch, md.LEARNING_RATE, trial_nb)
 
             fig_path = os.path.join(MODEL_STABILITY_STUDY_PLOTS, f"{Path(model_pkl_path).name}.png")
-            mape = plot_forecasts(
+            mape = plot_deepar_forecasts(
                 region_df_dict, md.END_TRAIN_DATE, tss, forecasts, past_length=2 * md.NB_HOURS_PRED, fig_path=fig_path)
             result_dict = {"learning_rate": md.LEARNING_RATE,
                            "max_epoch": max_epoch,
@@ -77,7 +77,7 @@ def run_num_eval_samples_stability_study(max_epoch, trial_nb):
 
         fig_path = os.path.join(
             NUM_EVAL_SAMPLES_STABILITY_STUDY_PLOTS, f"{Path(model_pkl_path).name}_{num_eval_samples}_samples.png")
-        mape = plot_forecasts(
+        mape = plot_deepar_forecasts(
             region_df_dict, md.END_TRAIN_DATE, tss, forecasts, past_length=2 * md.NB_HOURS_PRED, fig_path=fig_path)
         result_dict = {"learning_rate": md.LEARNING_RATE,
                        "max_epoch": max_epoch,
