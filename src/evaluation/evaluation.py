@@ -41,7 +41,7 @@ def evaluate_models(deepar_max_epochs):
             deepar_max_epochs, md.LEARNING_RATE)
 
         figname = Path(model_pkl_path).name
-        plot_deepar_forecasts(region_df_dict, md.END_TRAIN_DATE, tss, forecasts, past_length=2 * md.NB_HOURS_PRED,
+        plot_deepar_forecasts(region_df_dict, tss, forecasts, past_length=2 * md.NB_HOURS_PRED,
                               figname=figname)
 
     if os.path.exists(os.path.join(SARIMA_MODELS_PATH, "best_model.pkl")):

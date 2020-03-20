@@ -1,4 +1,5 @@
 from main import main, TDV
+from tests.prepare_raw_test_data import prepare_raw_test_data
 
 
 def test_main():
@@ -9,4 +10,5 @@ def test_main():
                  "run_deepar_stability_study": False,
                  "run_arima_training": False,
                  "evaluate": True}
+    prepare_raw_test_data()
     main(bool_dict, TDV)
