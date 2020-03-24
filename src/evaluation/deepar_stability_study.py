@@ -47,7 +47,7 @@ def run_model_stability_study(max_epoch_list, nb_trials):
 
             fig_path = os.path.join(MODEL_STABILITY_STUDY_PLOTS, f"{Path(model_pkl_path).name}.png")
             mape = plot_deepar_forecasts(
-                region_df_dict, md.END_TRAIN_DATE, tss, forecasts, past_length=2 * md.NB_HOURS_PRED, fig_path=fig_path)
+                region_df_dict, tss, forecasts, past_length=2 * md.NB_HOURS_PRED, fig_path=fig_path)
             result_dict = {"learning_rate": md.LEARNING_RATE,
                            "max_epoch": max_epoch,
                            "trial_nb": trial_nb,
@@ -78,7 +78,7 @@ def run_num_eval_samples_stability_study(max_epoch, trial_nb):
         fig_path = os.path.join(
             NUM_EVAL_SAMPLES_STABILITY_STUDY_PLOTS, f"{Path(model_pkl_path).name}_{num_eval_samples}_samples.png")
         mape = plot_deepar_forecasts(
-            region_df_dict, md.END_TRAIN_DATE, tss, forecasts, past_length=2 * md.NB_HOURS_PRED, fig_path=fig_path)
+            region_df_dict, tss, forecasts, past_length=2 * md.NB_HOURS_PRED, fig_path=fig_path)
         result_dict = {"learning_rate": md.LEARNING_RATE,
                        "max_epoch": max_epoch,
                        "trial_nb": trial_nb,

@@ -40,7 +40,7 @@ def plot_consumptions(region_df_dict, year, month):
     plt.close()
 
 
-def plot_deepar_forecasts(df_dict, tss, forecasts, past_length, figname):
+def plot_deepar_forecasts(df_dict, tss, forecasts, past_length, fig_path):
     register_matplotlib_converters()
 
     target = tss[0]
@@ -71,7 +71,7 @@ def plot_deepar_forecasts(df_dict, tss, forecasts, past_length, figname):
     yticks = np.arange(14000, 28000, step=2000)
     ax.set_yticks(yticks)
     ax.set_yticklabels([str(x) for x in yticks], fontsize=LABEL_FONTSIZE)
-    plt.savefig(os.path.join(DEEPAR_PLOTS, f"{figname}.png"))
+    plt.savefig(fig_path)
     plt.close()
 
     return mape

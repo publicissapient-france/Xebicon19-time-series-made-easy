@@ -17,6 +17,7 @@ from src.deepar.deepar_train import deepar_training_confs
 from src.deepar.deepar_core import predictor_path, make_predictions
 from src.sarima.sarima_train import SARIMA_MODELS_PATH as SARIMA_MODELS_PATH
 from src.evaluation.plots import plot_sarima_forecast
+from src.evaluation.plots import DEEPAR_PLOTS
 
 
 def evaluate_models(deepar_max_epochs):
@@ -40,9 +41,8 @@ def evaluate_models(deepar_max_epochs):
             region_df_dict, deepar_conf["region_list"], deepar_conf["feat_dynamic_cols"],
             deepar_max_epochs, md.LEARNING_RATE)
 
-        figname = Path(model_pkl_path).name
-        plot_deepar_forecasts(region_df_dict, tss, forecasts, past_length=2 * md.NB_HOURS_PRED,
-                              figname=figname)
+        fig_path = os.path.join(DEEPAR_PLOTS, f"{Path(model_pkl_path).name}.png")
+        plot_deepar_forecasts(region_df_dict, tss, forecasts, past_length=2 * md.NB_HOURS_PRED, fig_path=fig_path)
 
     if os.path.exists(os.path.join(SARIMA_MODELS_PATH, "best_model.pkl")):
         logging.info("Plotting Sarima forecasts.")
