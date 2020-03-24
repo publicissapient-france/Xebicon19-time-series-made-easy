@@ -23,6 +23,8 @@ TDV = {
     "max_epochs_list": eval(os.getenv("TEST_MAX_EPOCH_LIST", md.DEEPAR_MAX_EPOCH_LIST_STR)),
     "max_nb_trainings": eval(os.getenv("MAX_NB_TRAININGS", md.MAX_NB_TRAININGS)),
     "max_arima_param_range": int(os.getenv("MAX_ARIMA_PARAM_RANGE", 3)),
+    "nb_pred_num_eval_samples_study": int(
+        os.getenv("TEST_NB_PRED_NUM_EVAL_SAMPLES_STUDY", md.NB_PRED_NUM_EVAL_SAMPLES_STUDY))
 }
 
 
@@ -60,7 +62,8 @@ def main(bool_dict, tdv):
         run_model_stability_study(tdv["max_epochs_list"], tdv["max_nb_trainings"])
         plot_model_stability_study_results(tdv["max_epochs_list"], tdv["max_nb_trainings"])
 
-        run_num_eval_samples_stability_study(tdv["max_epochs_list"][0], trial_nb=1)
+        run_num_eval_samples_stability_study(tdv["max_epochs_list"][0], trial_nb=1,
+                                             nb_pred=tdv["nb_pred_num_eval_samples_study"])
         plot_num_eval_samples_study_results(tdv["max_epochs_list"][0], trial_nb=1)
 
     if bool_dict["run_arima_training"]:
@@ -75,7 +78,7 @@ if __name__ == "__main__":
                  "train_deepar": False,
                  "train_prophet": False,
                  "multiple_deepar_trainings": False,
-                 "run_deepar_stability_study": False,
+                 "run_deepar_stability_study": True,
                  "run_arima_training": False,
-                 "evaluate": True}
+                 "evaluate": False}
     main(bool_dict, TDV)

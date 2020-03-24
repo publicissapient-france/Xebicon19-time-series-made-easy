@@ -10,9 +10,11 @@ from pathlib import Path
 
 import src.constants.files as files
 import src.constants.models as md
+import src.constants.columns as c
 
 from src.evaluation.evaluation import prepare_data_for_deepar_plot
 from src.evaluation.plots import plot_deepar_forecasts
+from src.deepar.deepar_core import predictor_path, make_predictions
 
 STABILITY_STUDY_PATH = files.create_folder(
     os.path.join(files.OUTPUT_DATA, "deepar_stability_study"))
@@ -40,7 +42,7 @@ def run_model_stability_study(max_epoch_list, nb_trials):
     stability_study_results = []
 
     for max_epoch in max_epoch_list:
-        logging.info(f"Running prediction 10 times with model trained with {max_epoch} epochs.")
+        logging.info(f"Running prediction with {nb_trials} models trained with {max_epoch} epochs.")
         for trial_nb in range(1, nb_trials + 1):
             forecasts, tss, model_pkl_path = prepare_data_for_deepar_plot(
                 region_df_dict, [md.IDF], None, max_epoch, md.LEARNING_RATE, trial_nb)
@@ -62,32 +64,41 @@ def run_model_stability_study(max_epoch_list, nb_trials):
     stability_study_results_df.to_csv(MODEL_STABILITY_STUDY_RESULTS, index=False)
 
 
-def run_num_eval_samples_stability_study(max_epoch, trial_nb):
+def run_num_eval_samples_stability_study(max_epoch, trial_nb, nb_pred):
     region_df_dict = pickle.load(open(files.REGION_DF_DICT, "rb"))
     stability_study_results = []
 
-    num_eval_samples_list = [10, 100, 1000]
-    logging.info(
-        f"Running prediction with model trained with {max_epoch} epochs"
-        f" with sum eval samples in {num_eval_samples_list}.")
+    num_eval_samples_list = [10, 100, 200]
+
+    model_pkl_path = predictor_path(region_df_dict, [md.IDF], max_epoch, md.LEARNING_RATE, None, trial_nb)
+
+    with open(model_pkl_path, "rb") as model_pkl:
+        deepar_model = pickle.load(model_pkl)
+
     for num_eval_samples in num_eval_samples_list:
+        logging.info(
+            f"Running prediction {nb_pred} times with model trained with {max_epoch} epochs"
+            f" and num_eval_samples = {num_eval_samples}.")
+        for pred_nb in range(1, nb_pred + 1):
+            forecasts, tss = make_predictions(
+                deepar_model, region_df_dict, md.END_TRAIN_DATE, [md.IDF], target_col=c.EnergyConso.CONSUMPTION,
+                feat_dynamic_cols=None, num_eval_samples=num_eval_samples)
 
-        forecasts, tss, model_pkl_path = prepare_data_for_deepar_plot(
-            region_df_dict, [md.IDF], None, max_epoch, md.LEARNING_RATE, trial_nb, num_eval_samples=num_eval_samples)
+            fig_path = os.path.join(
+                NUM_EVAL_SAMPLES_STABILITY_STUDY_PLOTS,
+                f"{Path(model_pkl_path).name}_{num_eval_samples}_samples_{str(pred_nb)}.png")
+            mape = plot_deepar_forecasts(
+                region_df_dict, tss, forecasts, past_length=2 * md.NB_HOURS_PRED, fig_path=fig_path)
+            result_dict = {"learning_rate": md.LEARNING_RATE,
+                           "max_epoch": max_epoch,
+                           "trial_nb": trial_nb,
+                           "prediction_date": md.END_TRAIN_DATE,
+                           "nb_days_pred": int(md.NB_HOURS_PRED / 24),
+                           "num_eval_samples": num_eval_samples,
+                           "pred_nb": pred_nb,
+                           "MAPE": mape}
 
-        fig_path = os.path.join(
-            NUM_EVAL_SAMPLES_STABILITY_STUDY_PLOTS, f"{Path(model_pkl_path).name}_{num_eval_samples}_samples.png")
-        mape = plot_deepar_forecasts(
-            region_df_dict, tss, forecasts, past_length=2 * md.NB_HOURS_PRED, fig_path=fig_path)
-        result_dict = {"learning_rate": md.LEARNING_RATE,
-                       "max_epoch": max_epoch,
-                       "trial_nb": trial_nb,
-                       "prediction_date": md.END_TRAIN_DATE,
-                       "nb_days_pred": int(md.NB_HOURS_PRED / 24),
-                       "num_eval_samples": num_eval_samples,
-                       "MAPE": mape}
-
-        stability_study_results.append(result_dict)
+            stability_study_results.append(result_dict)
 
     stability_study_results_df = pd.DataFrame.from_records(stability_study_results)
 
@@ -109,6 +120,8 @@ def plot_model_stability_study_results(max_epoch_list, nb_trials):
     plt.ylim([0, 25])
     plt.title(f"Distribution of MAPE on January 1st prediction for {nb_trials} trainings")
     plt.savefig(os.path.join(STABILITY_STUDY_PATH, "model_stability_boxplot.png"))
+
+    plt.close()
     
     
 def plot_num_eval_samples_study_results(max_epoch, trial_nb):
@@ -127,3 +140,5 @@ def plot_num_eval_samples_study_results(max_epoch, trial_nb):
     plt.ylim([5, 8])
     plt.title("Distribution of MAPE on January 1st prediction for different eval sample sizes")
     plt.savefig(os.path.join(STABILITY_STUDY_PATH, "num_eval_samples_stability_boxplot.png"))
+
+    plt.close()
