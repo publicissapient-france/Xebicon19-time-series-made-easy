@@ -106,8 +106,11 @@ test_data = ListDataset(
  
 forecast_it, ts_it = make_evaluation_predictions(test_data, predictor=predictor, num_eval_samples=100)
 ```
+
 ## Et si on appliquait sur un cas d'usage ?
-### Présentation du cas et des données utilisées
+
+### Présentation du cas et des données utilisées
+
 Nous avons choisi pour illustrer la performance de Prophet et DeepAR un jeu de [données open source de consommation énergétique heure par heure des régions françaises](https://opendata.reseaux-energies.fr/explore/dataset/eco2mix-regional-cons-def/information/?disjunctive.libelle_region&disjunctive.nature). Ce jeu de données comporte des séries temporelles similaires pour les différentes régions, on pourra donc vérifier si le fait d’entraîner un modèle sur l’ensemble des régions plutôt que sur une seule permet d’améliorer la performance sur la région choisie.
 
 
