@@ -45,7 +45,7 @@ def deepar_training_logging(region_df_dict, region_list, feat_dynamic_cols, max_
     logging.info(f"Training model for {region_str} with {max_epochs} epochs and lr of {learning_rate}{cov_str}.")
 
 
-def train_idf_n_times(max_epochs, learning_rate, n_trainings):
+def train_idf_n_times(max_epochs, learning_rate, n_trainings, fixed_seeds=False):
     with open(files.REGION_DF_DICT, "rb") as f:
         region_df_dict = pickle.load(f)
 
@@ -53,12 +53,13 @@ def train_idf_n_times(max_epochs, learning_rate, n_trainings):
     feat_dynamic_cols = None
 
     nth_model_training_path = predictor_path(
-        region_df_dict, regions_list, max_epochs, learning_rate, feat_dynamic_cols, trial_number=n_trainings)
+        region_df_dict, regions_list, max_epochs, learning_rate, feat_dynamic_cols, trial_number=n_trainings,
+        fixed_seeds=fixed_seeds)
     model_dir, nth_model_name = os.path.split(nth_model_training_path)
 
     while True:
         if nth_model_name in os.listdir(DEEPAR_MODELS_PATH):
             break
         train_predictor(region_df_dict, md.END_TRAIN_DATE, regions_list, max_epochs, learning_rate,
-                        c.EnergyConso.CONSUMPTION, feat_dynamic_cols=feat_dynamic_cols)
+                        c.EnergyConso.CONSUMPTION, feat_dynamic_cols=feat_dynamic_cols, fixed_seeds=fixed_seeds)
 

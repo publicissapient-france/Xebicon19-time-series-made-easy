@@ -80,10 +80,10 @@ def prepare_data_for_prophet_plot(df_idf, model_name):
 
 
 def prepare_data_for_deepar_plot(region_df_dict, regions_list, feat_dynamic_cols, max_epochs, learning_rate,
-                                 trial_number=1, num_eval_samples=100):
+                                 trial_number=1, num_eval_samples=100, fixed_seeds=False):
     model_pkl_path = predictor_path(
         region_df_dict, regions_list, max_epochs, learning_rate, feat_dynamic_cols,
-        trial_number)
+        trial_number, fixed_seeds)
 
     with open(model_pkl_path, "rb") as model_pkl:
         deepar_model = pickle.load(model_pkl)

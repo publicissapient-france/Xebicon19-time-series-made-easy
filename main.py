@@ -8,7 +8,7 @@ from src.prophet.prophet_train import prophet_train
 from src.evaluation.evaluation import evaluate_models
 from src.evaluation.deepar_stability_study import (
     run_model_stability_study, plot_model_stability_study_results, run_num_eval_samples_stability_study,
-    plot_num_eval_samples_study_results)
+    plot_num_eval_samples_study_results, free_vs_fixed_seeds_plot)
 from src.sarima.sarima_train import sarima_train
 
 import src.constants.models as md
@@ -55,16 +55,22 @@ def main(bool_dict, tdv):
 
     if bool_dict["multiple_deepar_trainings"]:
         logging.info("Training deepar multiple times to test stability.")
-        for max_epochs in tdv["max_epochs_list"]:
-            train_idf_n_times(max_epochs, md.LEARNING_RATE, n_trainings=tdv["max_nb_trainings"])
+        #for max_epochs in tdv["max_epochs_list"]:
+            #train_idf_n_times(max_epochs, md.LEARNING_RATE, n_trainings=tdv["max_nb_trainings"])
+        # Sanity check to make sure that setting the seeds results in stable results
+        train_idf_n_times(
+            tdv["max_epochs_list"][0], md.LEARNING_RATE, n_trainings=tdv["max_nb_trainings"], fixed_seeds=True)
 
     if bool_dict["run_deepar_stability_study"]:
-        run_model_stability_study(tdv["max_epochs_list"], tdv["max_nb_trainings"])
-        plot_model_stability_study_results(tdv["max_epochs_list"], tdv["max_nb_trainings"])
+        #run_model_stability_study(tdv["max_epochs_list"], tdv["max_nb_trainings"])
+        #plot_model_stability_study_results(tdv["max_epochs_list"], tdv["max_nb_trainings"])
 
-        run_num_eval_samples_stability_study(tdv["max_epochs_list"][0], trial_nb=1,
-                                             nb_pred=tdv["nb_pred_num_eval_samples_study"])
-        plot_num_eval_samples_study_results(tdv["max_epochs_list"][0], trial_nb=1)
+        # run_model_stability_study([tdv["max_epochs_list"][0]], tdv["max_nb_trainings"], fixed_seeds=True)
+        free_vs_fixed_seeds_plot()
+
+        #run_num_eval_samples_stability_study(tdv["max_epochs_list"][0], trial_nb=1,
+        #                                     nb_pred=tdv["nb_pred_num_eval_samples_study"])
+        #plot_num_eval_samples_study_results(tdv["max_epochs_list"][0], trial_nb=1)
 
     if bool_dict["run_arima_training"]:
         sarima_train(tdv["max_arima_param_range"])

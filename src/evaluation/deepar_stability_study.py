@@ -21,7 +21,15 @@ STABILITY_STUDY_PATH = files.create_folder(
 
 MODEL_STABILITY_STUDY_PLOTS = files.create_folder(os.path.join(STABILITY_STUDY_PATH, "model_stability_study_plots"))
 
-MODEL_STABILITY_STUDY_RESULTS = os.path.join(STABILITY_STUDY_PATH, "model_stability_study_results.csv")
+
+def model_stability_study_results_path(fixed_seeds=False):
+    if fixed_seeds:
+        stability_results_file = "fixed_seeds_model_stability_study_results.csv"
+    else:
+        stability_results_file = "model_stability_study_results.csv"
+
+    return os.path.join(STABILITY_STUDY_PATH, stability_results_file)
+
 
 NUM_EVAL_SAMPLES_STABILITY_STUDY_PLOTS = files.create_folder(
     os.path.join(STABILITY_STUDY_PATH, "num_eval_samples_stability_study_plots"))
@@ -30,7 +38,7 @@ NUM_EVAL_SAMPLES_STABILITY_STUDY_RESULTS = os.path.join(
     STABILITY_STUDY_PATH, "num_eval_samples_stability_study_results.csv")
 
 
-def run_model_stability_study(max_epoch_list, nb_trials):
+def run_model_stability_study(max_epoch_list, nb_trials, fixed_seeds=False):
     """
     Run evaluation of same models trained nb_trials times with different max_epoch to assess deepar stability.
 
@@ -45,7 +53,7 @@ def run_model_stability_study(max_epoch_list, nb_trials):
         logging.info(f"Running prediction with {nb_trials} models trained with {max_epoch} epochs.")
         for trial_nb in range(1, nb_trials + 1):
             forecasts, tss, model_pkl_path = prepare_data_for_deepar_plot(
-                region_df_dict, [md.IDF], None, max_epoch, md.LEARNING_RATE, trial_nb)
+                region_df_dict, [md.IDF], None, max_epoch, md.LEARNING_RATE, trial_nb, fixed_seeds=fixed_seeds)
 
             fig_path = os.path.join(MODEL_STABILITY_STUDY_PLOTS, f"{Path(model_pkl_path).name}.png")
             mape = plot_deepar_forecasts(
@@ -61,7 +69,7 @@ def run_model_stability_study(max_epoch_list, nb_trials):
 
     stability_study_results_df = pd.DataFrame.from_records(stability_study_results)
 
-    stability_study_results_df.to_csv(MODEL_STABILITY_STUDY_RESULTS, index=False)
+    stability_study_results_df.to_csv(model_stability_study_results_path(fixed_seeds), index=False)
 
 
 def run_num_eval_samples_stability_study(max_epoch, trial_nb, nb_pred):
@@ -106,7 +114,7 @@ def run_num_eval_samples_stability_study(max_epoch, trial_nb, nb_pred):
 
 
 def plot_model_stability_study_results(max_epoch_list, nb_trials):
-    results = pd.read_csv(MODEL_STABILITY_STUDY_RESULTS)
+    results = pd.read_csv(model_stability_study_results_path(fixed_seeds=False))
     results = results[results["max_epoch"].isin(max_epoch_list) & (results["trial_nb"] <= nb_trials)]
     # Turn MAPE into percentage
     results["MAPE"] = results["MAPE"]*100
@@ -117,12 +125,39 @@ def plot_model_stability_study_results(max_epoch_list, nb_trials):
     ax = sns.swarmplot(x="max_epoch", y="MAPE", data=results, color=".25", s=10)
     plt.xlabel("Number of training epochs")
     plt.ylabel("MAPE (%)")
-    plt.ylim([0, 25])
+    # plt.ylim([0, 30])
     plt.title(f"Distribution of MAPE on January 1st prediction for {nb_trials} trainings")
     plt.savefig(os.path.join(STABILITY_STUDY_PATH, "model_stability_boxplot.png"))
 
     plt.close()
-    
+
+
+def free_vs_fixed_seeds_plot():
+    results_free_seeds = pd.read_csv(model_stability_study_results_path(fixed_seeds=False))
+    results_fixed_seeds = pd.read_csv(model_stability_study_results_path(fixed_seeds=True))
+
+    results_free_seeds["seeds"] = "free"
+    results_fixed_seeds["seeds"] = "fixed"
+    results_free_seeds = pd.merge(results_free_seeds, results_fixed_seeds[["learning_rate", "max_epoch", "trial_nb"]],
+                                  on=["learning_rate", "max_epoch", "trial_nb"], how="inner")
+
+    all_results = pd.concat([results_free_seeds, results_fixed_seeds])
+
+    # Turn MAPE into percentage
+    all_results["MAPE"] = all_results["MAPE"] * 100
+
+    matplotlib.rcParams.update({'font.size': 22})
+    plt.figure(1, figsize=(20, 8))
+    sns.boxplot(x="seeds", y="MAPE", data=all_results, whis=[10, 90])
+    sns.swarmplot(x="seeds", y="MAPE", data=all_results, color=".25", s=10)
+    plt.xlabel("Constraint on seeds")
+    plt.ylabel("MAPE (%)")
+
+    plt.title(f"Distribution of MAPE on January 1st prediction for models trained repeatedly with 20 iterations")
+    plt.savefig(os.path.join(STABILITY_STUDY_PATH, "free_vs_fixed_seeds_model_stability_boxplot.png"))
+
+    plt.close()
+
     
 def plot_num_eval_samples_study_results(max_epoch, trial_nb):
     results = pd.read_csv(NUM_EVAL_SAMPLES_STABILITY_STUDY_RESULTS)
@@ -137,7 +172,7 @@ def plot_num_eval_samples_study_results(max_epoch, trial_nb):
     ax = sns.swarmplot(x="num_eval_samples", y="MAPE_r", data=results, color=".25", s=10)
     plt.xlabel("Number of samples for prediction")
     plt.ylabel("MAPE (%)")
-    plt.ylim([5, 8])
+    plt.ylim([5, 6.5])
     plt.title("Distribution of MAPE on January 1st prediction for different eval sample sizes")
     plt.savefig(os.path.join(STABILITY_STUDY_PATH, "num_eval_samples_stability_boxplot.png"))
 

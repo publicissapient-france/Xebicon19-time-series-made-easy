@@ -2,6 +2,8 @@ from gluonts.model.deepar import DeepAREstimator
 from gluonts.trainer import Trainer
 from gluonts.dataset.common import ListDataset
 from gluonts.evaluation.backtest import make_evaluation_predictions
+import mxnet as mx
+import numpy as np
 
 from datetime import timedelta
 import pickle
@@ -16,7 +18,12 @@ DEEPAR_MODELS_PATH = files.create_folder(os.path.join(files.MODELS, "deepar"))
 
 
 def train_predictor(region_df_dict, end_train_date, regions_list, max_epochs, learning_rate, target_col,
-                    feat_dynamic_cols=None):
+                    feat_dynamic_cols=None, fixed_seeds=False):
+    if fixed_seeds:
+        # Seeds setting taken from
+        # https://gluon-ts.mxnet.io/examples/extended_forecasting_tutorial/extended_tutorial.html
+        mx.random.seed(0)
+        np.random.seed(0)
 
     estimator = DeepAREstimator(freq=md.FREQ,
                                 prediction_length=md.NB_HOURS_PRED,
@@ -44,7 +51,8 @@ def train_predictor(region_df_dict, end_train_date, regions_list, max_epochs, le
              for region in regions_list],
             freq=md.FREQ
         )
-    model_path = predictor_path(region_df_dict, regions_list, max_epochs, learning_rate, feat_dynamic_cols)
+    model_path = predictor_path(
+        region_df_dict, regions_list, max_epochs, learning_rate, feat_dynamic_cols, fixed_seeds=fixed_seeds)
     model_dir, model_name = os.path.split(model_path)
     logging.info("Training deepar model {}".format(model_name))
     logging.getLogger().setLevel(logging.WARNING)
@@ -58,7 +66,8 @@ def train_predictor(region_df_dict, end_train_date, regions_list, max_epochs, le
     return predictor
 
 
-def predictor_path(region_df_dict, regions_list, max_epochs, learning_rate, feat_dynamic_cols, trial_number=None):
+def predictor_path(region_df_dict, regions_list, max_epochs, learning_rate, feat_dynamic_cols, trial_number=None,
+                   fixed_seeds=False):
     if len(regions_list) == 1:
         current_predictor_name = "{}_{}_epochs_lr_{}".format(regions_list[0], max_epochs, learning_rate)
     elif len(regions_list) == len(list(region_df_dict.keys())):
@@ -68,6 +77,8 @@ def predictor_path(region_df_dict, regions_list, max_epochs, learning_rate, feat
         "incomplete subset of regions.")
     if feat_dynamic_cols is not None:
         current_predictor_name += "_" + "_".join(feat_dynamic_cols)
+    if fixed_seeds:
+        current_predictor_name = "fixed_seeds_" + current_predictor_name
     # Add 1 to max existing trial number if trial_number is not specified in keywords
     if trial_number is None:
         existing_models = os.listdir(DEEPAR_MODELS_PATH)
