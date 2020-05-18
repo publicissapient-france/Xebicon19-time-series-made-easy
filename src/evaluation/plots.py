@@ -5,6 +5,7 @@ import matplotlib
 import matplotlib.pyplot as plt
 import os
 import numpy as np
+import logging
 from statsmodels.tsa.statespace.sarimax import SARIMAXResults
 
 from src.core import mean_absolute_percentage_error
@@ -40,8 +41,9 @@ def plot_consumptions(region_df_dict, year, month):
     plt.close()
 
 
-def plot_deepar_forecasts(df_dict, tss, forecasts, past_length, fig_path):
+def plot_deepar_forecasts(df_dict, tss, forecasts, past_length, fig_path, prediction_date):
     register_matplotlib_converters()
+    prediction_date_str = datetime.strftime(prediction_date, "%Y-%m-%d")
 
     target = tss[0]
     forecast = forecasts[0]
@@ -51,26 +53,28 @@ def plot_deepar_forecasts(df_dict, tss, forecasts, past_length, fig_path):
     plt.legend(["observations", "median prediction", "90% confidence interval", "50% confidence interval"])
 
     results_mean = forecast.mean
-    ground_truth = df_dict[forecast.item_id][c.EnergyConso.CONSUMPTION][
-                   md.END_TRAIN_DATE + timedelta(hours=1):md.END_TRAIN_DATE + timedelta(hours=md.NB_HOURS_PRED)].values
+    ground_truth = df_dict[forecast.item_id][c.EnergyConso.CONSUMPTION].fillna(method="ffill")[
+                   prediction_date + timedelta(hours=1):prediction_date + timedelta(hours=md.NB_HOURS_PRED)].values
+
     mape = mean_absolute_percentage_error(ground_truth, results_mean)
 
-    plt.title("Deepar: Prediction for " + forecast.item_id + " with MAPE: {}%".format(str(round(100 * mape, 1))),
+    plt.title(f"Deepar: Prediction for {forecast.item_id} on {prediction_date_str}. MAPE: {round(100 * mape, 1)}%",
               fontsize=TITLE_FONTSIZE)
     plt.ylabel("Consumption (MW)", fontsize=LABEL_FONTSIZE)
     plt.xlabel("")
-    ax.set_xlim([md.END_TRAIN_DATE - timedelta(days=md.NB_HOURS_PRED / 24),
-                 md.END_TRAIN_DATE + timedelta(days=md.NB_HOURS_PRED / 24)])
-    ax.set_ylim([12000, 28000])
-    xticks = [md.END_TRAIN_DATE + timedelta(days=x) for x in [-11, -7, -3, 0, 4, 8, 12]]
+    ax.set_xlim([prediction_date - timedelta(days=md.NB_HOURS_PRED / 24),
+                 prediction_date + timedelta(days=md.NB_HOURS_PRED / 24)])
+    if prediction_date==md.END_TRAIN_DATE:
+        ax.set_ylim([12000, 28000])
+        yticks = np.arange(14000, 28000, step=2000)
+        ax.set_yticks(yticks)
+    ax.set_yticklabels([str(int(x)) for x in ax.get_yticks()], fontsize=LABEL_FONTSIZE)
+    xticks = [prediction_date + timedelta(days=x) for x in [-11, -7, -3, 0, 4, 8, 12]]
     ax.set_xticks(xticks, minor=True)
-    ax.set_xticklabels([datetime.strftime(date, "%Y-%m-%d") for date in xticks if date != md.END_TRAIN_DATE],
+    ax.set_xticklabels([datetime.strftime(date, "%Y-%m-%d") for date in xticks if date != prediction_date],
                        minor=True, fontsize=LABEL_FONTSIZE)
-    ax.set_xticklabels(["", datetime.strftime(md.END_TRAIN_DATE, "%Y-%m-%d"), ""], minor=False,
+    ax.set_xticklabels(["", datetime.strftime(prediction_date, "%Y-%m-%d"), ""], minor=False,
                        fontsize=LABEL_FONTSIZE)
-    yticks = np.arange(14000, 28000, step=2000)
-    ax.set_yticks(yticks)
-    ax.set_yticklabels([str(x) for x in yticks], fontsize=LABEL_FONTSIZE)
     plt.savefig(fig_path)
     plt.close()
 

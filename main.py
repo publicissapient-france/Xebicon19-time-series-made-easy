@@ -8,7 +8,8 @@ from src.prophet.prophet_train import prophet_train
 from src.evaluation.evaluation import evaluate_models
 from src.evaluation.deepar_stability_study import (
     run_model_stability_study, plot_model_stability_study_results, run_num_eval_samples_stability_study,
-    plot_num_eval_samples_study_results, free_vs_fixed_seeds_plot)
+    plot_num_eval_samples_study_results, free_vs_fixed_seeds_plot, plot_model_performance_on_multiple_dates,
+    plot_retraining_free_seeds_vs_multiple_dates)
 from src.sarima.sarima_train import sarima_train
 
 import src.constants.models as md
@@ -54,23 +55,38 @@ def main(bool_dict, tdv):
         prophet_train()
 
     if bool_dict["multiple_deepar_trainings"]:
-        logging.info("Training deepar multiple times to test stability.")
-        #for max_epochs in tdv["max_epochs_list"]:
-            #train_idf_n_times(max_epochs, md.LEARNING_RATE, n_trainings=tdv["max_nb_trainings"])
+        logging.info("Training deepar multiple times for stability tests.")
+        for max_epochs in tdv["max_epochs_list"]:
+            logging.info(f"Training with {max_epochs} epochs")
+            train_idf_n_times(max_epochs, md.LEARNING_RATE, n_trainings=tdv["max_nb_trainings"])
         # Sanity check to make sure that setting the seeds results in stable results
+        logging.info(f"Training with fixed_seeds")
         train_idf_n_times(
             tdv["max_epochs_list"][0], md.LEARNING_RATE, n_trainings=tdv["max_nb_trainings"], fixed_seeds=True)
 
     if bool_dict["run_deepar_stability_study"]:
-        #run_model_stability_study(tdv["max_epochs_list"], tdv["max_nb_trainings"])
-        #plot_model_stability_study_results(tdv["max_epochs_list"], tdv["max_nb_trainings"])
+        logging.info("Running model stability study with free random seeds.")
+        run_model_stability_study(tdv["max_epochs_list"], tdv["max_nb_trainings"])
+        plot_model_stability_study_results(tdv["max_epochs_list"], tdv["max_nb_trainings"])
 
-        # run_model_stability_study([tdv["max_epochs_list"][0]], tdv["max_nb_trainings"], fixed_seeds=True)
+        logging.info("Running model stability study with fixed random seeds.")
+        run_model_stability_study([tdv["max_epochs_list"][0]], tdv["max_nb_trainings"], fixed_seeds=True)
         free_vs_fixed_seeds_plot()
 
-        #run_num_eval_samples_stability_study(tdv["max_epochs_list"][0], trial_nb=1,
-        #                                     nb_pred=tdv["nb_pred_num_eval_samples_study"])
-        #plot_num_eval_samples_study_results(tdv["max_epochs_list"][0], trial_nb=1)
+        logging.info("Running num_eval_samples stability study.")
+        run_num_eval_samples_stability_study(
+         tdv["max_epochs_list"][0], trial_nb=1, nb_pred=tdv["nb_pred_num_eval_samples_study"],
+         num_eval_samples_list=[10, 100, 200],
+         results_file=files.NUM_EVAL_SAMPLES_STUDY_FILE)
+        plot_num_eval_samples_study_results(tdv["max_epochs_list"][0], trial_nb=1, prediction_date=md.END_TRAIN_DATE)
+
+        logging.info("Evaluating performance over 6 months at 2 week intervals"
+                     " with same model and num_eval_samples of 100.")
+        run_num_eval_samples_stability_study(
+         tdv["max_epochs_list"][0], trial_nb=1, nb_pred=1, num_eval_samples_list=[100],
+         results_file=files.MULTIPLE_DAYS_PERFORMANCE_STUDY_FILE, nb_additional_pred_days=12)
+        plot_model_performance_on_multiple_dates()
+        plot_retraining_free_seeds_vs_multiple_dates()
 
     if bool_dict["run_arima_training"]:
         sarima_train(tdv["max_arima_param_range"])

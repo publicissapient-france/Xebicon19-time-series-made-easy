@@ -48,3 +48,6 @@ REGION_DF_DICT = os.path.join(INTERIM_DATA, "region_df_dict.pkl")
 
 PROPHET_2_YEARS_MODEL = "prophet_2_years.pkl"
 PROPHET_2_YEARS_WEATHER_MODEL = "prophet_2_years_with_weather.pkl"
+
+NUM_EVAL_SAMPLES_STUDY_FILE = "num_eval_samples_stability_study_results.csv"
+MULTIPLE_DAYS_PERFORMANCE_STUDY_FILE = "multiple_days_performance_study_results.csv"
