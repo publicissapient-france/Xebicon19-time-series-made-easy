@@ -2,6 +2,7 @@ from datetime import datetime, timedelta
 from pandas.plotting import register_matplotlib_converters
 register_matplotlib_converters()
 import matplotlib
+import pandas as pd
 import matplotlib.pyplot as plt
 import os
 import numpy as np
@@ -48,9 +49,11 @@ def plot_deepar_forecasts(df_dict, tss, forecasts, past_length, fig_path, predic
     target = tss[0]
     forecast = forecasts[0]
     ax = target[-past_length:].plot(figsize=(20, 5), linewidth=2)
-    forecast.plot(color='g')
-    plt.grid(which='both')
-    plt.legend(["observations", "median prediction", "90% confidence interval", "50% confidence interval"])
+    plot_deepar_forecast(forecast, ax, color="g")
+    ax.grid(which='minor', axis="x")
+    ax.grid(which='both', axis="y")
+    ax.legend(["observations", "median prediction", "90% confidence interval", "50% confidence interval"],
+              fontsize=LABEL_FONTSIZE)
 
     results_mean = forecast.mean
     ground_truth = df_dict[forecast.item_id][c.EnergyConso.CONSUMPTION].fillna(method="ffill")[
@@ -68,13 +71,17 @@ def plot_deepar_forecasts(df_dict, tss, forecasts, past_length, fig_path, predic
         ax.set_ylim([12000, 28000])
         yticks = np.arange(14000, 28000, step=2000)
         ax.set_yticks(yticks)
+        xticks = [prediction_date + timedelta(days=x) for x in [-11, -7, -3, 0, 4, 8, 12]]
+        ax.set_xticks(xticks, minor=True)
+        ax.set_xticklabels([datetime.strftime(date, "%Y-%m-%d") for date in xticks if date != prediction_date],
+                           minor=True, fontsize=LABEL_FONTSIZE)
+        ax.set_xticklabels(["", datetime.strftime(prediction_date, "%Y-%m-%d"), ""], minor=False,
+                           fontsize=LABEL_FONTSIZE)
     ax.set_yticklabels([str(int(x)) for x in ax.get_yticks()], fontsize=LABEL_FONTSIZE)
     xticks = [prediction_date + timedelta(days=x) for x in [-11, -7, -3, 0, 4, 8, 12]]
     ax.set_xticks(xticks, minor=True)
-    ax.set_xticklabels([datetime.strftime(date, "%Y-%m-%d") for date in xticks if date != prediction_date],
-                       minor=True, fontsize=LABEL_FONTSIZE)
-    ax.set_xticklabels(["", datetime.strftime(prediction_date, "%Y-%m-%d"), ""], minor=False,
-                       fontsize=LABEL_FONTSIZE)
+    ax.set_xticklabels([datetime.strftime(date, "%Y-%m-%d") for date in xticks],
+                       fontsize=LABEL_FONTSIZE, minor=True)
     plt.savefig(fig_path)
     plt.close()
 
@@ -185,3 +192,77 @@ def plot_sarima(serie_test, series, model, n_steps, s, d):
 
     plt.savefig(os.path.join(SARIMA_PLOTS, f"sarima_pred_{int(n_steps/24)}_days.png"))
     plt.close()
+
+
+def plot_deepar_forecast(
+        forecast,
+        ax,
+        prediction_intervals=(50.0, 90.0),
+        color="b",
+        *args,
+        **kwargs,
+):
+    """
+    Plots the median of the forecast as well as confidence bounds.
+    (requires matplotlib and pandas).
+
+    Parameters
+    ----------
+    forecast : a DeepAR forecast object.
+    ax : a matplotlib axis.
+    prediction_intervals : float or list of floats in [0, 100]
+        Confidence interval size(s). If a list, it will stack the error
+        plots for each confidence interval. Only relevant for error styles
+        with "ci" in the name.
+    color : matplotlib color name or dictionary
+        The color used for plotting the forecast.
+    args :
+        Other arguments are passed to main plot() call
+    kwargs :
+        Other keyword arguments are passed to main plot() call
+    """
+
+    for c in prediction_intervals:
+        assert 0.0 <= c <= 100.0
+
+    ps = [50.0] + [
+        50.0 + f * c / 2.0
+        for c in prediction_intervals
+        for f in [-1.0, +1.0]
+    ]
+    percentiles_sorted = sorted(set(ps))
+
+    def alpha_for_percentile(p):
+        return (p / 100.0) ** 0.3
+
+    ps_data = [forecast.quantile(p / 100.0) for p in percentiles_sorted]
+    i_p50 = len(percentiles_sorted) // 2
+
+    p50_data = ps_data[i_p50]
+    p50_series = pd.Series(data=p50_data, index=forecast.index)
+    p50_series.plot(color=color, ls="-", label=f"median", ax=ax)
+
+    for i in range(len(percentiles_sorted) // 2):
+        ptile = percentiles_sorted[i]
+        alpha = alpha_for_percentile(ptile)
+        plt.fill_between(
+            forecast.index,
+            ps_data[i],
+            ps_data[-i - 1],
+            facecolor=color,
+            alpha=alpha,
+            interpolate=True,
+            *args,
+            **kwargs,
+        )
+        # Hack to create labels for the error intervals.
+        # Doesn't actually plot anything, because we only pass a single data point
+        pd.Series(data=p50_data[:1], index=forecast.index[:1]).plot(
+            color=color,
+            alpha=alpha,
+            linewidth=10,
+            label=f"{100 - ptile * 2}%",
+            ax=ax,
+            *args,
+            **kwargs,
+        )
